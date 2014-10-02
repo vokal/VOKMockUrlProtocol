@@ -34,6 +34,12 @@ static NSString *const MockDataDirectory = @"VOKMockData";
 
 #pragma mark -
 
+@interface VOKMockUrlProtocol() <NSStreamDelegate>
+@property (nonatomic) NSMutableData *streamData;
+@property (nonatomic) NSString *bodyString;
+
+@end
+
 @implementation VOKMockUrlProtocol
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -80,18 +86,90 @@ static NSString *const MockDataDirectory = @"VOKMockData";
     }
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
         || [kHTTPMethodPatch isEqualToString:self.request.HTTPMethod]) {
-        [resourceName appendFormat:@"|%@",
-         [[NSString alloc] initWithData:self.request.HTTPBody
-                               encoding:NSUTF8StringEncoding]];
+        if (self.request.HTTPBody) {
+            //Easy!
+            [resourceName appendFormat:@"|%@",
+             [[NSString alloc] initWithData:self.request.HTTPBody
+                                   encoding:NSUTF8StringEncoding]];
+        } else {
+            //*shakes fist* APPPLLLLLLLEEEE
+            [self readDataFromStream:self.request.HTTPBodyStream];
+            
+            //Let the stream actually get read in.
+            VOKIdleFor(2);
+            
+            [resourceName appendString:@"|"];
+            if (self.bodyString) {
+                //Percent escape in case JSON
+                [resourceName appendString:[self.bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            }
+        }
     }
+    
+    NSRange fullStringRange = NSMakeRange(0, [resourceName length]);
+    
+    // Replace any colons with hyphens
+    [resourceName replaceOccurrencesOfString:@":"
+                                  withString:@"-"
+                                     options:0
+                                       range:fullStringRange];
+    
     // Replace any slashes with hyphens.
     [resourceName replaceOccurrencesOfString:@"/"
                                   withString:@"-"
                                      options:0
-                                       range:NSMakeRange(0, [resourceName length])];
+                                       range:fullStringRange];
     
     return resourceName;
 }
+
+#pragma mark Stream Handling
+
+void VOKIdleFor(NSTimeInterval idleInterval) {
+    NSRunLoop *theRL = [NSRunLoop currentRunLoop];
+    NSDate *stopDate = [NSDate dateWithTimeIntervalSinceNow:idleInterval];
+    while ([theRL runMode:NSDefaultRunLoopMode beforeDate:stopDate]
+           && [stopDate compare:[NSDate date]] == NSOrderedDescending);
+}
+
+- (void)readDataFromStream:(NSInputStream *)bodyStream
+{
+    [bodyStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    bodyStream.delegate = self;
+    [bodyStream open];
+}
+
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode
+{
+    if (!self.streamData) {
+        self.streamData = [NSMutableData data];
+    }
+    
+    switch (eventCode) {
+        case NSStreamEventHasBytesAvailable: {
+            uint8_t buffer[1024];
+            int length = 0;
+            
+            length = [(NSInputStream *)aStream read:buffer maxLength:1024];
+            if (length > 0) {
+                [self.streamData appendBytes:buffer length:length];
+            }
+            
+            
+        }   break;
+        case NSStreamEventEndEncountered: {
+            self.bodyString = [[NSString alloc] initWithBytes:self.streamData.bytes
+                                                       length:self.streamData.length
+                                                     encoding:NSUTF8StringEncoding];
+            
+            
+        }   break;
+        default:
+            break;
+    }
+}
+
+#pragma mark Mock Response
 
 /**
  *  Construct an NSHTTPURLResponse and NSData based on a complete HTTP response, as a string.
