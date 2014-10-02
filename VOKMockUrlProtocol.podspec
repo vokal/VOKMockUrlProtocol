@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/vokalinteractive/VOKMockUrlProtocol"
   s.license      = { :type => "MIT", :file => "LICENSE"}
   s.author       = { "VOKAL Interactive" => "hello@vokalinteractive.com" }
-  s.source       = { :git => "https://github.com/vokalinteractive/VOKMockUrlProtocol.git", :tag => #{s.version} }
+  s.source       = { :git => "https://github.com/vokalinteractive/VOKMockUrlProtocol.git", :tag => "#{s.version}" }
   s.source_files = "*.{h,m}"
   s.requires_arc = true
   s.dependency 'ILGHttpConstants', '~> 1.0.0'
