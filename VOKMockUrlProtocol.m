@@ -96,7 +96,7 @@ static NSString *const MockDataDirectory = @"VOKMockData";
             [self readDataFromStream:self.request.HTTPBodyStream];
             
             //Let the stream actually get read in.
-            VOKIdleFor(2);
+            VOKIdleFor(0.5);
             
             [resourceName appendString:@"|"];
             if (self.bodyString) {
