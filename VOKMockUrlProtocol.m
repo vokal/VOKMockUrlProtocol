@@ -155,11 +155,11 @@ void VOKIdleFor(NSTimeInterval idleInterval) {
                 [self.streamData appendBytes:buffer length:length];
             } 
         }   break;
-        case NSStreamEventEndEncountered: {
+        case NSStreamEventEndEncountered: 
             self.bodyString = [[NSString alloc] initWithBytes:self.streamData.bytes
                                                        length:self.streamData.length
                                                      encoding:NSUTF8StringEncoding];
-        }   break;
+            break;
         default:
             break;
     }
