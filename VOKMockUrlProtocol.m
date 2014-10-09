@@ -85,7 +85,8 @@ static NSString *const MockDataDirectory = @"VOKMockData";
         [resourceName appendFormat:@"?%@", self.request.URL.query];
     }
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
-        || [kHTTPMethodPatch isEqualToString:self.request.HTTPMethod]) {
+        || [kHTTPMethodPatch isEqualToString:self.request.HTTPMethod]
+        || [kHTTPMethodPut isEqualToString:self.request.HTTPMethod]) {
         if (self.request.HTTPBody) {
             //Easy!
             [resourceName appendFormat:@"|%@",
