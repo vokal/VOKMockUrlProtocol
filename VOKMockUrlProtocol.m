@@ -101,8 +101,10 @@ static NSString *const MockDataDirectory = @"VOKMockData";
             
             [resourceName appendString:@"|"];
             if (self.bodyString) {
+                NSString *possiblyJSONified = [self alphabeticallyOrderedParametersForJSONString:self.bodyString];
+
                 //Percent escape in case JSON
-                [resourceName appendString:[self.bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                [resourceName appendString:[possiblyJSONified stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
             }
         }
     }
@@ -122,6 +124,55 @@ static NSString *const MockDataDirectory = @"VOKMockData";
                                        range:fullStringRange];
     
     return resourceName;
+}
+
+/**
+ *  Alphabetically orders the parameters of a JSON string since different processors can order these differently,
+ *  causing tests to bomb out because of different orders of params for file names.
+ *
+ *  @param jsonString A string potentially containing JSON.
+ *
+ *  @return If the data is not serializable to a dictionary, nil. Otherwise, an alphabetized JSON representation of the parameters so this returns consistent data.
+ */
+- (NSString *)alphabeticallyOrderedParametersForJSONString:(NSString *)jsonString
+{
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    if (!jsonData) {
+        //This is not json.
+        return jsonString;
+    }
+    
+    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                             options:0
+                                                               error:nil];
+    if (!jsonDict) {
+        //Not serializable
+        return jsonString;
+    }
+    
+    NSArray *keys = [jsonDict allKeys];
+    NSArray *sortedKeys = [keys sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    
+    NSMutableArray *sortedValues = [NSMutableArray array];
+    for (NSString *key in sortedKeys) {
+        [sortedValues addObject:jsonDict[key]];
+    }
+    
+    NSMutableString *fakeJSON = [@"{" mutableCopy];
+    for (NSInteger i = 0; i < sortedKeys.count; i++) {
+        NSString *orderedKey = sortedKeys[i];
+        NSString *orderedValue = sortedValues[i];
+        [fakeJSON appendFormat:@"\"%@\":\"\%@\"", orderedKey, orderedValue];
+        
+        NSInteger next = i + 1;
+        if (next != sortedKeys.count) {
+            [fakeJSON appendString:@","];
+        }
+    }
+    
+    [fakeJSON appendString:@"}"];
+    
+    return fakeJSON;
 }
 
 #pragma mark Stream Handling
