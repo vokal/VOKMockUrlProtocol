@@ -34,12 +34,6 @@ static NSString *const MockDataDirectory = @"VOKMockData";
 
 #pragma mark -
 
-@interface VOKMockUrlProtocol() <NSStreamDelegate>
-@property (nonatomic) NSMutableData *streamData;
-@property (nonatomic) NSString *bodyString;
-
-@end
-
 @implementation VOKMockUrlProtocol
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -87,25 +81,30 @@ static NSString *const MockDataDirectory = @"VOKMockData";
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
         || [kHTTPMethodPatch isEqualToString:self.request.HTTPMethod]
         || [kHTTPMethodPut isEqualToString:self.request.HTTPMethod]) {
-        if (self.request.HTTPBody) {
-            //Easy!
-            [resourceName appendFormat:@"|%@",
-             [[NSString alloc] initWithData:self.request.HTTPBody
-                                   encoding:NSUTF8StringEncoding]];
-        } else {
-            //*shakes fist* APPPLLLLLLLEEEE
-            [self readDataFromStream:self.request.HTTPBodyStream];
+        NSData *bodyData = self.request.HTTPBody;
+        if (!bodyData && self.request.HTTPBodyStream) {
+            NSMutableData *mutableData = [NSMutableData data];
+            NSInputStream *bodyStream = self.request.HTTPBodyStream;
+            [bodyStream open];
+            NSUInteger length = 0;
+            NSUInteger const bufferSize = 1024;
+            uint8_t buffer[bufferSize];
+            //Read in chunks until there's nothing left to read
+            do {
+                [mutableData appendBytes:buffer length:length];
+                length = [bodyStream read:buffer maxLength:bufferSize];
+            } while (length > 0);
             
-            //Let the stream actually get read in.
-            VOKIdleFor(0.5);
+            bodyData = mutableData;
+        }
+        
+        NSString *bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
+        
+        if (bodyString) {
+            NSString *possiblyJSONified = [self alphabeticallyOrderedParametersForJSONString:bodyString];
             
-            [resourceName appendString:@"|"];
-            if (self.bodyString) {
-                NSString *possiblyJSONified = [self alphabeticallyOrderedParametersForJSONString:self.bodyString];
-
-                //Percent escape in case JSON
-                [resourceName appendString:[possiblyJSONified stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-            }
+            //Percent escape in case JSON
+            [resourceName appendFormat:@"|%@", [possiblyJSONified stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
         }
     }
     
@@ -173,48 +172,6 @@ static NSString *const MockDataDirectory = @"VOKMockData";
     [fakeJSON appendString:@"}"];
     
     return fakeJSON;
-}
-
-#pragma mark Stream Handling
-
-void VOKIdleFor(NSTimeInterval idleInterval) {
-    NSRunLoop *theRL = [NSRunLoop currentRunLoop];
-    NSDate *stopDate = [NSDate dateWithTimeIntervalSinceNow:idleInterval];
-    while ([theRL runMode:NSDefaultRunLoopMode beforeDate:stopDate]
-           && [stopDate compare:[NSDate date]] == NSOrderedDescending);
-}
-
-- (void)readDataFromStream:(NSInputStream *)bodyStream
-{
-    [bodyStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    bodyStream.delegate = self;
-    [bodyStream open];
-}
-
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode
-{
-    if (!self.streamData) {
-        self.streamData = [NSMutableData data];
-    }
-    
-    switch (eventCode) {
-        case NSStreamEventHasBytesAvailable: {
-            uint8_t buffer[1024];
-            int length = 0;
-            
-            length = [(NSInputStream *)aStream read:buffer maxLength:1024];
-            if (length > 0) {
-                [self.streamData appendBytes:buffer length:length];
-            } 
-        }   break;
-        case NSStreamEventEndEncountered: 
-            self.bodyString = [[NSString alloc] initWithBytes:self.streamData.bytes
-                                                       length:self.streamData.length
-                                                     encoding:NSUTF8StringEncoding];
-            break;
-        default:
-            break;
-    }
 }
 
 #pragma mark Mock Response
