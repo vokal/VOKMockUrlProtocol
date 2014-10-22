@@ -87,12 +87,12 @@ static NSString *const MockDataDirectory = @"VOKMockData";
             NSInputStream *bodyStream = self.request.HTTPBodyStream;
             [bodyStream open];
             NSUInteger length = 0;
-            NSUInteger const bufferSize = 1024;
-            uint8_t buffer[bufferSize];
-            //Read in chunks until there's nothing left to read
+            static NSUInteger const BufferSize = 1024;
+            uint8_t buffer[BufferSize];
+            // Read in chunks of up to BufferSize until there's nothing left to read.
             do {
                 [mutableData appendBytes:buffer length:length];
-                length = [bodyStream read:buffer maxLength:bufferSize];
+                length = [bodyStream read:buffer maxLength:BufferSize];
             } while (length > 0);
             
             bodyData = mutableData;
@@ -103,14 +103,14 @@ static NSString *const MockDataDirectory = @"VOKMockData";
         if (bodyString) {
             NSString *possiblyJSONified = [self alphabeticallyOrderedParametersForJSONString:bodyString];
             
-            //Percent escape in case JSON
+            // Percent escape, for better filename compatibility.
             [resourceName appendFormat:@"|%@", [possiblyJSONified stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
         }
     }
     
     NSRange fullStringRange = NSMakeRange(0, [resourceName length]);
     
-    // Replace any colons with hyphens
+    // Replace any colons with hyphens.
     [resourceName replaceOccurrencesOfString:@":"
                                   withString:@"-"
                                      options:0
@@ -131,47 +131,67 @@ static NSString *const MockDataDirectory = @"VOKMockData";
  *
  *  @param jsonString A string potentially containing JSON.
  *
- *  @return If the data is not serializable to a dictionary, nil. Otherwise, an alphabetized JSON representation of the parameters so this returns consistent data.
+ *  @return If the data does not deserialize to a dictionary, passes through the input; otherwise, an alphabetized JSON representation of the parameters so this returns consistent data.
  */
 - (NSString *)alphabeticallyOrderedParametersForJSONString:(NSString *)jsonString
 {
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     if (!jsonData) {
-        //This is not json.
+        // This is not json.
         return jsonString;
     }
     
     NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData
                                                              options:0
                                                                error:nil];
-    if (!jsonDict) {
-        //Not serializable
+    if (!jsonDict || ![jsonDict isKindOfClass:[NSDictionary class]]) {
+        // Not serializable and/or not a dictionary.
         return jsonString;
     }
     
-    NSArray *keys = [jsonDict allKeys];
-    NSArray *sortedKeys = [keys sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    NSArray *sortedKeys = [[jsonDict allKeys] sortedArrayUsingSelector:@selector(compare:)];
     
-    NSMutableArray *sortedValues = [NSMutableArray array];
+    NSMutableArray *sortedKeyValuePairs = [NSMutableArray arrayWithCapacity:[sortedKeys count]];
     for (NSString *key in sortedKeys) {
-        [sortedValues addObject:jsonDict[key]];
-    }
-    
-    NSMutableString *fakeJSON = [@"{" mutableCopy];
-    for (NSInteger i = 0; i < sortedKeys.count; i++) {
-        NSString *orderedKey = sortedKeys[i];
-        NSString *orderedValue = sortedValues[i];
-        [fakeJSON appendFormat:@"\"%@\":\"\%@\"", orderedKey, orderedValue];
-        
-        NSInteger next = i + 1;
-        if (next != sortedKeys.count) {
-            [fakeJSON appendString:@","];
+        NSString *jsonKeyString = [self jsonStringForObject:key];
+        if (!jsonKeyString) {
+            continue;
         }
+        NSString *jsonValueString = [self jsonStringForObject:jsonDict[key]];
+        if (!jsonValueString) {
+            continue;
+        }
+        [sortedKeyValuePairs addObject:[NSString stringWithFormat:@"%@:%@", jsonKeyString, jsonValueString]];
     }
     
-    [fakeJSON appendString:@"}"];
+    return [NSString stringWithFormat:@"{%@}", [sortedKeyValuePairs componentsJoinedByString:@","]];
+}
+
+- (NSString *)jsonStringForObject:(id)object
+{
+    // Wrap with an array, so we can serialize strings in particular, maybe other things...
+    NSArray *safetyArray = @[object];
+    if (![NSJSONSerialization isValidJSONObject:safetyArray]) {
+        return nil;
+    }
     
-    return fakeJSON;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:safetyArray
+                                                   options:0
+                                                     error:NULL];
+    if (!data) {
+        return nil;
+    }
+    NSMutableString *string = [[NSMutableString alloc] initWithData:data
+                                                           encoding:NSUTF8StringEncoding];
+    if (!string) {
+        return nil;
+    }
+    
+    // If we actually got a string, strip out the surrounding [] from our container array.
+    [string deleteCharactersInRange:NSMakeRange(string.length - 1, 1)];
+    [string deleteCharactersInRange:NSMakeRange(0, 1)];
+    
+    return string;
 }
 
 #pragma mark Mock Response
