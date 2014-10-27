@@ -143,7 +143,7 @@ static NSString *const MockDataDirectory = @"VOKMockData";
     
     NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData
                                                              options:0
-                                                               error:nil];
+                                                               error:NULL];
     if (!jsonDict || ![jsonDict isKindOfClass:[NSDictionary class]]) {
         // Not serializable and/or not a dictionary.
         return jsonString;
