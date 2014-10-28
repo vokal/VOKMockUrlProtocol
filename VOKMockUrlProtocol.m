@@ -207,7 +207,7 @@ static NSString *const MockDataDirectory = @"VOKMockData";
 {
     NSError *regexError;
     NSRegularExpression *statusHeadersBodyRegex = [NSRegularExpression
-                                                   regularExpressionWithPattern:@"^([^\r\n]*)[\r\n](.*)[\r\n]{2}(.*)$"
+                                                   regularExpressionWithPattern:@"^([^\r\n]*)[\r\n]?(.*)[\r\n]{2}(.*)$"
                                                    options:NSRegularExpressionDotMatchesLineSeparators
                                                    error:&regexError];
     if (!statusHeadersBodyRegex) {
