@@ -10,9 +10,9 @@ Create a folder reference called `VOKMockData`, so that the entire `VOKMockData`
 - have the `.json` extension to always return an `HTTP/1.1 200 Success` with `Content-type: text/json` and the content of the `.json` file; or
 - have the `.http` extension to parse an HTTP response with the following format:
   - status on the first line
-  - headers on the following lines (or a blank line for no headers)
+  - headers on the following lines
   - blank line
-  - body on the following lines (or another blank line for no body)
+  - body on the following lines
 
 Example HTTP responses:
 
@@ -31,7 +31,7 @@ Allow: POST, OPTIONS
 {"id": 63, "auth_token": "50db3356e743fa3f1b790a8648fc15cc4bbf04a2", "phone_number": "+13125551214", "email": "test33@test.com", "name": "Testy McTesterson", "role": "Customer"}
 ```
 
-HTTP response with headers and no body.  Note the __two__ blank lines at the end!
+HTTP response with headers and no body.  Note the blank line at the end!
 ```
 HTTP/1.1 202 Accepted
 Content-Type: text/plain; charset=UTF-8
@@ -40,21 +40,17 @@ Server: Apache-Coyote/1.1
 Content-Length: 0
 Connection: keep-alive
 
-
 ```
 
-HTTP response with no headers and no body.  Note the __three__ blank lines at the end!
-```
-HTTP/1.1 202 Accepted
-
-
-
-```
-
-HTTP response with no headers and a body.  Note the __two__ blank lines in the middle!
+HTTP response with no headers and no body.  Note the blank line at the end!
 ```
 HTTP/1.1 202 Accepted
 
+```
+
+HTTP response with no headers and a body.
+```
+HTTP/1.1 202 Accepted
 
 {"favorite_dog_breed": "dogfish"}
 ```
