@@ -230,9 +230,6 @@ static NSString *const MockDataDirectory = @"VOKMockData";
         statusCode = [statusParts[1] integerValue];
     }
     
-    
-    NSMutableArray *headers = [[headerLines componentsSeparatedByString:@"\n"] mutableCopy];
-    
     // Parse the headers into a dictionary.
     NSRegularExpression *headerRegex = [NSRegularExpression
                                         regularExpressionWithPattern:@"^([^:]*):(.*)$"
@@ -242,7 +239,7 @@ static NSString *const MockDataDirectory = @"VOKMockData";
         DLOG(@"header regex error: %@", regexError);
         return nil;
     }
-    NSMutableDictionary *headerDict = [NSMutableDictionary dictionaryWithCapacity:[headers count] - 1];
+    NSMutableDictionary *headerDict = [NSMutableDictionary dictionary];
     [headerRegex
      enumerateMatchesInString:headerLines
      options:0
