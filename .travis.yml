@@ -1,0 +1,4 @@
+language: objective-c
+xcode_workspace: VOKMockUrlProtocol.xcworkspace
+xcode_scheme: VOKMockUrlProtocol
+xcode_sdk: iphonesimulator8.0
