@@ -1,6 +1,8 @@
 VOKMockUrlProtocol
 ==================
 
+![](https://api.travis-ci.org/vokalinteractive/VOKMockUrlProtocol.svg)
+
 A url protocol that parses and returns fake responses with mock data.
 
 ## Usage
