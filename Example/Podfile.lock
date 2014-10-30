@@ -1,0 +1,17 @@
+PODS:
+  - ILGHttpConstants (1.0.0)
+  - VOKMockUrlProtocol (1.0.2):
+    - ILGHttpConstants (~> 1.0.0)
+
+DEPENDENCIES:
+  - VOKMockUrlProtocol (from `../`)
+
+EXTERNAL SOURCES:
+  VOKMockUrlProtocol:
+    :path: ../
+
+SPEC CHECKSUMS:
+  ILGHttpConstants: 6e9661f7011c8b0dee57440e1e4c1a65ecfc0e6d
+  VOKMockUrlProtocol: 092563c9a33370203e301159775449fea55bc4df
+
+COCOAPODS: 0.34.4

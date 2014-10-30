@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "VOKMockUrlProtocol"
-  s.version          = "1.0.3"
+  s.version          = "1.0.2"
   s.summary          = "A url protocol that parses and returns fake responses with mock data."
   s.homepage         = "https://github.com/vokalinteractive/VOKMockUrlProtocol"
   s.license          = { :type => "MIT", :file => "LICENSE"}
