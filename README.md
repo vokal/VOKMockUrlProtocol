@@ -56,3 +56,22 @@ HTTP/1.1 202 Accepted
 
 {"favorite_dog_breed": "dogfish"}
 ```
+
+###Using with NSURLSessionConfiguration
+
+In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert it's class into a `NSURLSessionConfigurations`'s [`protocolClasses`](https://developer.apple.com/library/prerelease/ios/documentation/Foundation/Reference/NSURLSessionConfiguration_class/index.html#//apple_ref/occ/instp/NSURLSessionConfiguration/protocolClasses).
+
+Example:
+```
+    Class mockURLProtocol = [VOKMockUrlProtocol class];
+    NSMutableArray *currentProtocolClasses = [self.sessionConfiguration.protocolClasses mutableCopy];
+    [currentProtocolClasses insertObject:mockURLProtocol atIndex:0];
+    self.sessionConfiguration.protocolClasses = [currentProtocolClasses copy];
+```
+In order to switch back and forth between mock and live, you can also take out the Mock Url Protocol by just removing it:
+```
+    Class mockURLProtocol = [VOKMockUrlProtocol class];
+    NSMutableArray *currentProtocolClasses = [self.sessionConfiguration.protocolClasses mutableCopy];
+    [currentProtocolClasses removeObject:mockURLProtocol];
+    self.sessionConfiguration.protocolClasses = [currentProtocolClasses copy];
+  ```
