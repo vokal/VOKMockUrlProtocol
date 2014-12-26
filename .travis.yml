@@ -1,7 +1,6 @@
 language: objective-c
 xcode_workspace: Example/VOKMockUrlProtocol.xcworkspace
 xcode_scheme: VOKMockUrlProtocol
-xcode_sdk: iphonesimulator8.0
 before_install:
   - brew update
   - if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
