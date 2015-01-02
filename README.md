@@ -66,7 +66,7 @@ HTTP/1.1 202 Accepted
 
 ### Using with NSURLSessionConfiguration
 
-In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert it's class into a `NSURLSessionConfigurations`'s [`protocolClasses`](https://developer.apple.com/library/prerelease/ios/documentation/Foundation/Reference/NSURLSessionConfiguration_class/index.html#//apple_ref/occ/instp/NSURLSessionConfiguration/protocolClasses).
+In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert its class into a `NSURLSessionConfigurations`'s [`protocolClasses`](https://developer.apple.com/library/prerelease/ios/documentation/Foundation/Reference/NSURLSessionConfiguration_class/index.html#//apple_ref/occ/instp/NSURLSessionConfiguration/protocolClasses).
 
 Example:
 ```
