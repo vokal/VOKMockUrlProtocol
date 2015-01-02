@@ -6,4 +6,5 @@ end
 
 target 'Tests', :exclusive => true do
     pod "VOKMockUrlProtocol", :path => "../"
+    pod "AFNetworking/Serialization"
 end
