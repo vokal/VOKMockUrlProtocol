@@ -1,7 +1,9 @@
 PODS:
   - ILGHttpConstants (1.0.0)
-  - VOKMockUrlProtocol (1.0.2):
+  - VOKBenkode (0.1.1)
+  - VOKMockUrlProtocol (2.0.0):
     - ILGHttpConstants (~> 1.0.0)
+    - VOKBenkode (~> 0.1.1)
 
 DEPENDENCIES:
   - VOKMockUrlProtocol (from `../`)
@@ -12,6 +14,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   ILGHttpConstants: 6e9661f7011c8b0dee57440e1e4c1a65ecfc0e6d
-  VOKMockUrlProtocol: 092563c9a33370203e301159775449fea55bc4df
+  VOKBenkode: 1f43ee8c0dd065fd09c16204ee296b82492d11b0
+  VOKMockUrlProtocol: 9e33dff9342dbbf7b046b2ef8db038940d33a46d
 
 COCOAPODS: 0.34.4

@@ -12,4 +12,5 @@ Pod::Spec.new do |s|
 
   s.source_files = 'VOKMockUrlProtocol.[hm]'
   s.dependency 'ILGHttpConstants', '~> 1.0.0'
+  s.dependency 'VOKBenkode', '~> 0.1.1'
 end
