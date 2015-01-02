@@ -40,7 +40,7 @@ Otherwise, use the SHA-256 hash of the request body, as a 64-character lower-cas
 
 **Note:** For backward compatibility when additional specific content-type handling is added in the future, if a more-specific content-type-based filename is not found, the hash-based filename will be tried before returning a `HTTP/1.1 404 Not Found` response.
 
-## Examples
+### Examples
 
 The request
 
@@ -51,7 +51,10 @@ Accept: */*
 
 ```
 
-yields the base name `GET|-foo-?page=2`.
+yields the base name
+```
+GET|-foo-?page=2
+```
 
 ---
 
@@ -66,7 +69,14 @@ Content-Length: 42
 email=user%40example.com&password=password
 ```
 
-yields the base name `POST|-login-|email=user%40example.com&password=password` with the fallback base name `POST|-login-|169d720631e603967135cfce10d235e94aac22b87500ea09d1be295f5b300dca`.
+yields the base name
+```
+POST|-login-|email=user%40example.com&password=password
+```
+with the fallback base name
+```
+POST|-login-|169d720631e603967135cfce10d235e94aac22b87500ea09d1be295f5b300dca
+```
 
 ---
 
@@ -81,4 +91,11 @@ Content-Length: 50
 {"email":"user@example.com","password":"password"}
 ```
 
-yields the base name `POST|-login-|d5-email16-user@example.com8-password8-passworde` with the fallback base name `POST|-login-|236a9780f782b62654f6caf7c4614e47b15800c087a9d43c87c47164617a74f0`.
+yields the base name
+```
+POST|-login-|d5-email16-user@example.com8-password8-passworde
+```
+with the fallback base name
+```
+POST|-login-|236a9780f782b62654f6caf7c4614e47b15800c087a9d43c87c47164617a74f0
+```
