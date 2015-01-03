@@ -1,13 +1,20 @@
 VOKMockUrlProtocol
 ==================
 
-![](https://api.travis-ci.org/vokalinteractive/VOKMockUrlProtocol.svg)
+[![CI Status](http://img.shields.io/travis/vokalinteractive/VOKMockUrlProtocol.svg?style=flat)](https://travis-ci.org/vokalinteractive/VOKMockUrlProtocol)
+[![Version](https://img.shields.io/cocoapods/v/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
+[![License](https://img.shields.io/cocoapods/l/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
+[![Platform](https://img.shields.io/cocoapods/p/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
 
 A url protocol that parses and returns fake responses with mock data.
 
 ## Usage
 
-Create a folder reference called `VOKMockData`, so that the entire `VOKMockData` directory is copied into your test app bundle and place mock data files in there.  The easiest way to determine the proper file name for a mock data item is to make the mock API call and note the missing mock data file reported in the logs.  Mock data files may:
+Create a folder reference called `VOKMockData`, so that the entire `VOKMockData` directory is copied into your test app bundle and place mock data files in there.  The easiest way to determine the proper file name for a mock data item is to make the mock API call and note the missing mock data file reported in the logs.  The full naming convention is described [here](MockDataNaming.md).
+
+***Note:*** **The naming convention for mock data files has changed with version 2.x.**  Mock data files from version 1.x may need to be renamed to work with version 2.x, particularly for requests with a body (e.g., `POST` requests), particularly when the body is not `application/x-www-form-urlencoded `.
+
+Mock data files may:
 
 - have the `.json` extension to always return an `HTTP/1.1 200 Success` with `Content-type: text/json` and the content of the `.json` file; or
 - have the `.http` extension to parse an HTTP response with the following format:
@@ -57,9 +64,9 @@ HTTP/1.1 202 Accepted
 {"favorite_dog_breed": "dogfish"}
 ```
 
-###Using with NSURLSessionConfiguration
+### Using with NSURLSessionConfiguration
 
-In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert it's class into a `NSURLSessionConfigurations`'s [`protocolClasses`](https://developer.apple.com/library/prerelease/ios/documentation/Foundation/Reference/NSURLSessionConfiguration_class/index.html#//apple_ref/occ/instp/NSURLSessionConfiguration/protocolClasses).
+In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert its class into a `NSURLSessionConfigurations`'s [`protocolClasses`](https://developer.apple.com/library/prerelease/ios/documentation/Foundation/Reference/NSURLSessionConfiguration_class/index.html#//apple_ref/occ/instp/NSURLSessionConfiguration/protocolClasses).
 
 Example:
 ```

@@ -1,5 +1,5 @@
 //
-//  VOKMockUrlProtocolTests.m
+//  HttpFileParsingTests.m
 //  VOKMockUrlProtocolTests
 //
 //  Created by Isaac Greenspan on 10/27/2014.
@@ -11,11 +11,11 @@
 #import <HTTPStatusCodes.h>
 #import <VOKMockUrlProtocol.h>
 
-@interface VOKMockUrlProtocolTests : XCTestCase
+@interface HttpFileParsingTests : XCTestCase
 
 @end
 
-@implementation VOKMockUrlProtocolTests
+@implementation HttpFileParsingTests
 
 + (void)setUp
 {

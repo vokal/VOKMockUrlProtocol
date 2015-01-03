@@ -7,8 +7,11 @@
 
 #import "VOKMockUrlProtocol.h"
 
+#import <CommonCrypto/CommonDigest.h>
+
 #import <HTTPStatusCodes.h>
 #import <HTTPMethods.h>
+#import <VOKBenkode.h>
 
 #ifndef DLOG
     // Define DLOG to log to NSLog when DEBUG is defined
@@ -20,6 +23,12 @@
 #endif
 
 static NSString *const MockDataDirectory = @"VOKMockData";
+
+static NSString *const AppendSeparatorFormat = @"|%@";
+
+static NSString *const HTTPHeaderContentType = @"Content-type";
+static NSString *const HTTPHeaderContentTypeFormUrlencoded = @"application/x-www-form-urlencoded";
+static NSString *const HTTPHeaderContentTypeJson = @"application/json";
 
 #pragma mark -
 
@@ -66,132 +75,148 @@ static NSString *const MockDataDirectory = @"VOKMockData";
 #pragma mark - Helpers
 
 /**
- *  Define a resource name based on the HTTP method, the full path, the query string, and possibly the body of the
- *  current request.
+ *  Define one or more resource names based on the HTTP method, the full path, the query string, and possibly the body 
+ *  of the current request.
  *
- *  @return The file name for mock data corresponding to our request.
+ *  @return An array of potential file names for mock data corresponding to our request.
  */
-- (NSString *)resourceName
+- (NSArray *)resourceNames
 {
+    // Start with the HTTP method.
     NSMutableString *resourceName = [self.request.HTTPMethod mutableCopy];
-    [resourceName appendFormat:@"|%@", self.request.URL.path];
+    
+    // Append separator and the path.
+    [resourceName appendFormat:AppendSeparatorFormat, self.request.URL.path];
+    
+    // If there's a query string, append ? and the query string.
     if (self.request.URL.query) {
         [resourceName appendFormat:@"?%@", self.request.URL.query];
     }
+    
+    NSArray *resourceNames;
+    
+    // If the request is one that can have a body...
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
         || [kHTTPMethodPatch isEqualToString:self.request.HTTPMethod]
         || [kHTTPMethodPut isEqualToString:self.request.HTTPMethod]) {
-        NSData *bodyData = self.request.HTTPBody;
-        if (!bodyData && self.request.HTTPBodyStream) {
-            NSMutableData *mutableData = [NSMutableData data];
-            NSInputStream *bodyStream = self.request.HTTPBodyStream;
-            [bodyStream open];
-            NSUInteger length = 0;
-            static NSUInteger const BufferSize = 1024;
-            uint8_t buffer[BufferSize];
-            // Read in chunks of up to BufferSize until there's nothing left to read.
-            do {
-                [mutableData appendBytes:buffer length:length];
-                length = [bodyStream read:buffer maxLength:BufferSize];
-            } while (length > 0);
+        NSData *bodyData = [self bodyDataFromRequest:self.request];
+        
+        // Compute the SHA-256 of the body and generate a resource name from that.
+        NSMutableString *hashResourceName = [resourceName mutableCopy];
+        [hashResourceName appendFormat:AppendSeparatorFormat, [self sha256HexOfData:bodyData]];
+        
+        NSString *contentType = [self.request valueForHTTPHeaderField:HTTPHeaderContentType];
+        
+        if ([HTTPHeaderContentTypeFormUrlencoded isEqualToString:contentType]) {
+            // If it's form-URL-encoded, generate a resource name by appending the body as a string.
+            NSString *bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
+            [resourceName appendFormat:AppendSeparatorFormat, bodyString];
+            resourceNames = @[ resourceName, hashResourceName, ];
             
-            bodyData = mutableData;
+        } else if ([HTTPHeaderContentTypeJson isEqualToString:contentType]) {
+            // Otherwise, if it's JSON, generate a resource name by bencoding the JSON datastructure and percent-
+            // escaping the resulting string.
+            NSData *bencoded = [VOKBenkode encode:
+                                [NSJSONSerialization JSONObjectWithData:bodyData
+                                                                options:NSJSONReadingAllowFragments
+                                                                  error:NULL]];
+            if (bencoded) {
+                [resourceName appendFormat:AppendSeparatorFormat,
+                 [[[NSString alloc] initWithData:bencoded encoding:NSUTF8StringEncoding]
+                  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                resourceNames = @[ resourceName, hashResourceName, ];
+            } else {
+                // If the bencode fails (or the JSON-decode fails), just use the hash resource name.
+                resourceNames = @[ hashResourceName, ];
+            }
+            
+        } else {
+            // Otherwise, just use the hash resource name.
+            resourceNames = @[ hashResourceName, ];
         }
         
-        NSString *bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
-        
-        if (bodyString) {
-            NSString *possiblyJSONified = [self alphabeticallyOrderedParametersForJSONString:bodyString];
-            
-            // Percent escape, for better filename compatibility.
-            [resourceName appendFormat:@"|%@", [possiblyJSONified stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-        }
+    } else {
+        // Otherwise, the only possible name is what we have so far.
+        resourceNames = @[ resourceName, ];
     }
     
-    NSRange fullStringRange = NSMakeRange(0, [resourceName length]);
+    for (NSMutableString *name in resourceNames) {
+        [self replacePathSeparatorsInMutableString:name];
+    }
     
-    // Replace any colons with hyphens.
-    [resourceName replaceOccurrencesOfString:@":"
-                                  withString:@"-"
-                                     options:0
-                                       range:fullStringRange];
-    
-    // Replace any slashes with hyphens.
-    [resourceName replaceOccurrencesOfString:@"/"
-                                  withString:@"-"
-                                     options:0
-                                       range:fullStringRange];
-    
-    return resourceName;
+    return resourceNames;
 }
 
 /**
- *  Alphabetically orders the parameters of a JSON string since different processors can order these differently,
- *  causing tests to bomb out because of different orders of params for file names.
+ *  Replace any instance of path separator characters (slash `/` and colon `:`) with hyphens.
  *
- *  @param jsonString A string potentially containing JSON.
- *
- *  @return If the data does not deserialize to a dictionary, passes through the input; otherwise, an alphabetized JSON representation of the parameters so this returns consistent data.
+ *  @param string The mutable string in which to make the replacements
  */
-- (NSString *)alphabeticallyOrderedParametersForJSONString:(NSString *)jsonString
+- (void)replacePathSeparatorsInMutableString:(NSMutableString *)string
 {
-    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
-    if (!jsonData) {
-        // This is not json.
-        return jsonString;
-    }
+    NSRange fullStringRange = NSMakeRange(0, string.length);
     
-    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData
-                                                             options:0
-                                                               error:NULL];
-    if (!jsonDict || ![jsonDict isKindOfClass:[NSDictionary class]]) {
-        // Not serializable and/or not a dictionary.
-        return jsonString;
-    }
+    // Replace any colons with hyphens.
+    [string replaceOccurrencesOfString:@":"
+                            withString:@"-"
+                               options:0
+                                 range:fullStringRange];
     
-    NSArray *sortedKeys = [[jsonDict allKeys] sortedArrayUsingSelector:@selector(compare:)];
-    
-    NSMutableArray *sortedKeyValuePairs = [NSMutableArray arrayWithCapacity:[sortedKeys count]];
-    for (NSString *key in sortedKeys) {
-        NSString *jsonKeyString = [self jsonStringForObject:key];
-        if (!jsonKeyString) {
-            continue;
-        }
-        NSString *jsonValueString = [self jsonStringForObject:jsonDict[key]];
-        if (!jsonValueString) {
-            continue;
-        }
-        [sortedKeyValuePairs addObject:[NSString stringWithFormat:@"%@:%@", jsonKeyString, jsonValueString]];
-    }
-    
-    return [NSString stringWithFormat:@"{%@}", [sortedKeyValuePairs componentsJoinedByString:@","]];
+    // Replace any slashes with hyphens.
+    [string replaceOccurrencesOfString:@"/"
+                            withString:@"-"
+                               options:0
+                                 range:fullStringRange];
 }
 
-- (NSString *)jsonStringForObject:(id)object
+/**
+ *  Get the request body as `NSData` from an `NSURLRequest` (whether from the `body` or `bodyStream` property).
+ *
+ *  @param request The target `NSURLRequest`
+ *
+ *  @return The body data
+ */
+- (NSData *)bodyDataFromRequest:(NSURLRequest *)request
 {
-    // Wrap with an array, so we can serialize strings in particular, maybe other things...
-    NSArray *safetyArray = @[object];
-    if (![NSJSONSerialization isValidJSONObject:safetyArray]) {
+    NSData *bodyData = request.HTTPBody;
+    if (!bodyData && request.HTTPBodyStream) {
+        NSMutableData *mutableData = [NSMutableData data];
+        NSInputStream *bodyStream = request.HTTPBodyStream;
+        [bodyStream open];
+        NSUInteger length = 0;
+        static NSUInteger const BufferSize = 1024;
+        uint8_t buffer[BufferSize];
+        // Read in chunks of up to BufferSize until there's nothing left to read.
+        do {
+            [mutableData appendBytes:buffer length:length];
+            length = [bodyStream read:buffer maxLength:BufferSize];
+        } while (length > 0);
+        
+        bodyData = mutableData;
+    }
+    return bodyData;
+}
+
+/**
+ *  Get the 64-character lower-case hex form of the SHA-256 of an NSData object.
+ *
+ *  @param data The data object
+ *
+ *  @return The 64-character lower-case hex SHA-256 of the data
+ */
+- (NSString *)sha256HexOfData:(NSData *)data
+{
+    unsigned char hash[CC_SHA256_DIGEST_LENGTH];
+    if (!CC_SHA256(data.bytes, (CC_LONG)data.length, hash)) {
         return nil;
     }
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:safetyArray
-                                                   options:0
-                                                     error:NULL];
-    if (!data) {
-        return nil;
+    // Convert the bytes into a hex string.
+    NSMutableString *output = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (NSUInteger index = 0; index < CC_SHA256_DIGEST_LENGTH; index++) {
+        [output appendFormat:@"%02x", hash[index]];
     }
-    NSMutableString *string = [[NSMutableString alloc] initWithData:data
-                                                           encoding:NSUTF8StringEncoding];
-    if (!string) {
-        return nil;
-    }
-    
-    // If we actually got a string, strip out the surrounding [] from our container array.
-    [string deleteCharactersInRange:NSMakeRange(string.length - 1, 1)];
-    [string deleteCharactersInRange:NSMakeRange(0, 1)];
-    
-    return string;
+    return output;
 }
 
 #pragma mark Mock Response
@@ -271,42 +296,49 @@ static NSString *const MockDataDirectory = @"VOKMockData";
  */
 - (VOKMockUrlProtocolResponseAndDataContainer *)responseAndData
 {
-    NSString *resourceName = [self resourceName];
+    NSArray *resourceNames = [self resourceNames];
     NSString *filePath;
     
     // First, look for a complete-HTTP-response file.
-    filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
-                                                                ofType:@"http"
-                                                           inDirectory:MockDataDirectory];
-    NSString *fileContents = [NSString stringWithContentsOfFile:filePath
-                                                       encoding:NSUTF8StringEncoding
-                                                          error:NULL];
-    if (fileContents) {
-        // We've got a complete-HTTP-response file, so parse it.
-        DLOG(@"Serving mock data from complete HTTP response file (%@)", filePath);
-        return [self responseAndDataFromHTTPResponseString:fileContents];
+    for (NSString *resourceName in resourceNames) {
+        filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
+                                                                    ofType:@"http"
+                                                               inDirectory:MockDataDirectory];
+        NSString *fileContents = [NSString stringWithContentsOfFile:filePath
+                                                           encoding:NSUTF8StringEncoding
+                                                              error:NULL];
+        if (fileContents) {
+            // We've got a complete-HTTP-response file, so parse it.
+            DLOG(@"Serving mock data from complete HTTP response file (%@)", filePath);
+            return [self responseAndDataFromHTTPResponseString:fileContents];
+        }
     }
     
     // Otherwise, look for a JSON data file.
-    filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
-                                                                ofType:@"json"
-                                                           inDirectory:MockDataDirectory];
-    NSData *data = [NSData dataWithContentsOfFile:filePath];
-    if (data) {
-        // We've got a JSON data file, so send it.
-        DLOG(@"Serving mock data from JSON response body file (%@)", filePath);
-        NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:self.request.URL
-                                                                  statusCode:kHTTPStatusCodeOK
-                                                                 HTTPVersion:@"HTTP/1.1"
-                                                                headerFields:@{
-                                                                               @"Content-type": @"text/json",
-                                                                               }];
-        return [VOKMockUrlProtocolResponseAndDataContainer containerWithResponse:response
-                                                                            data:data];
+    for (NSString *resourceName in resourceNames) {
+        filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
+                                                                    ofType:@"json"
+                                                               inDirectory:MockDataDirectory];
+        NSData *data = [NSData dataWithContentsOfFile:filePath];
+        if (data) {
+            // We've got a JSON data file, so send it.
+            DLOG(@"Serving mock data from JSON response body file (%@)", filePath);
+            NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc]
+                                           initWithURL:self.request.URL
+                                           statusCode:kHTTPStatusCodeOK
+                                           HTTPVersion:@"HTTP/1.1"
+                                           headerFields:@{
+                                                          HTTPHeaderContentType: HTTPHeaderContentTypeJson,
+                                                          }];
+            return [VOKMockUrlProtocolResponseAndDataContainer containerWithResponse:response
+                                                                                data:data];
+        }
     }
     
     // Otherwise, failure.
-    DLOG(@"failed to get mock data for resource name: \"%@\"", resourceName);
+    for (NSString *resourceName in resourceNames) {
+        DLOG(@"failed to get mock data for resource name: \"%@\"", resourceName);
+    }
     NSHTTPURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:self.request.URL
                                                               statusCode:kHTTPStatusCodeNotFound
                                                              HTTPVersion:@"HTTP/1.1"
