@@ -21,7 +21,7 @@ The base name consists of:
 - if there is a query string:
 	- a question mark `?`
 	- the query string (it is expected that the keys and values in a standard query string will be [percent-encoded](http://en.wikipedia.org/wiki/Percent-encoding) )
-    - if the percent-encoded query string would make the filename too long for HFS+ (255 character max) the SHA-256 hash of the percent-encoded query string (as a 64-character lower-case hexadecimal string) will be used instead
+	- if the percent-encoded query string would make the filename too long for HFS+ (255 character max) the SHA-256 hash of the percent-encoded query string (as a 64-character lower-case hexadecimal string) will be used instead
 - if there is a request body:
 	- a pipe character `|`
 	- the encoding of the request body, [as described below](#request-body)
