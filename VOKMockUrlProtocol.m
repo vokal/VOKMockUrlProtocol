@@ -92,20 +92,21 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     // Append separator and the path.
     [resourceName appendFormat:AppendSeparatorFormat, self.request.URL.path];
     
+    NSMutableString *hashResourceName = [resourceName mutableCopy];
+    
+    NSMutableArray *resourceNames = [NSMutableArray arrayWithArray:@[
+                                                                     resourceName,
+                                                                     hashResourceName,
+                                                                     ]];
+    
     // If there's a query string, append ? and the query string.
     if (self.request.URL.query) {
-        //test to see if the query string would make the filename too long
-        NSInteger filenameLength = resourceName.length + 1 + self.request.URL.query.length;
-        if (filenameLength < MaxBaseFilenameLength) {
-            [resourceName appendFormat:@"?%@", self.request.URL.query];
-        } else {
-            //use the SHA-256 hash of the query and append that instead
-            NSData *queryData = [self.request.URL.query dataUsingEncoding:NSUTF8StringEncoding];
-            [resourceName appendFormat:@"?%@", [self sha256HexOfData:queryData]];
-        }
+        [resourceName appendFormat:@"?%@", self.request.URL.query];
+        
+        //take the SHA-256 hash of the query, just in case things get too long later
+        NSData *queryData = [self.request.URL.query dataUsingEncoding:NSUTF8StringEncoding];
+        [hashResourceName appendFormat:@"?%@", [self sha256HexOfData:queryData]];
     }
-    
-    NSArray *resourceNames;
     
     // If the request is one that can have a body...
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
@@ -114,7 +115,6 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
         NSData *bodyData = [self bodyDataFromRequest:self.request];
         
         // Compute the SHA-256 of the body and generate a resource name from that.
-        NSMutableString *hashResourceName = [resourceName mutableCopy];
         [hashResourceName appendFormat:AppendSeparatorFormat, [self sha256HexOfData:bodyData]];
         
         NSString *contentType = [self.request valueForHTTPHeaderField:HTTPHeaderContentType];
@@ -123,7 +123,6 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
             // If it's form-URL-encoded, generate a resource name by appending the body as a string.
             NSString *bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
             [resourceName appendFormat:AppendSeparatorFormat, bodyString];
-            resourceNames = @[ resourceName, hashResourceName, ];
             
         } else if ([HTTPHeaderContentTypeJson isEqualToString:contentType]) {
             // Otherwise, if it's JSON, generate a resource name by bencoding the JSON datastructure and percent-
@@ -136,24 +135,25 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
                 [resourceName appendFormat:AppendSeparatorFormat,
                  [[[NSString alloc] initWithData:bencoded encoding:NSUTF8StringEncoding]
                   stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-                resourceNames = @[ resourceName, hashResourceName, ];
             } else {
                 // If the bencode fails (or the JSON-decode fails), just use the hash resource name.
-                resourceNames = @[ hashResourceName, ];
+                [resourceNames removeObject:resourceName];
             }
             
         } else {
             // Otherwise, just use the hash resource name.
-            resourceNames = @[ hashResourceName, ];
+            [resourceNames removeObject:resourceName];
         }
         
-    } else {
-        // Otherwise, the only possible name is what we have so far.
-        resourceNames = @[ resourceName, ];
     }
     
-    for (NSMutableString *name in resourceNames) {
+    for (NSMutableString *name in [resourceNames copy]) {
         [self replacePathSeparatorsInMutableString:name];
+        
+        //test to see if the filename is too long
+        if (name.length > MaxBaseFilenameLength) {
+            [resourceNames removeObject:name];
+        }
     }
     
     return resourceNames;
