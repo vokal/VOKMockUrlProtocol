@@ -12,6 +12,7 @@
 #import <HTTPStatusCodes.h>
 #import <HTTPMethods.h>
 #import <VOKBenkode.h>
+#import <sys/syslimits.h>
 
 #ifndef DLOG
     // Define DLOG to log to NSLog when DEBUG is defined
@@ -31,7 +32,7 @@ static NSString *const HTTPHeaderContentTypeFormUrlencoded = @"application/x-www
 static NSString *const HTTPHeaderContentTypeJson = @"application/json";
 
 //255 HFS+ filename limit - 5 for file extension suffix
-static NSInteger const MaxBaseFilenameLength = 255 - 5;
+static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
 
 #pragma mark -
 
