@@ -99,4 +99,22 @@
     XCTAssertEqual(data.length, 0);
 }
 
+- (void)testHttpLongQueryFile
+{
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25"]];
+    NSError *error;
+    NSHTTPURLResponse *response;
+    NSData *data = [NSURLConnection sendSynchronousRequest:request
+                                         returningResponse:&response
+                                                     error:&error];
+    if (!data) {
+        XCTFail();
+        return;
+    }
+    XCTAssertNil(error);
+    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+    XCTAssertEqual(response.allHeaderFields.count, 0);
+    XCTAssertEqual(data.length, 0);
+}
+
 @end

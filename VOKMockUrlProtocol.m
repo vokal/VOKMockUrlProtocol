@@ -30,6 +30,9 @@ static NSString *const HTTPHeaderContentType = @"Content-type";
 static NSString *const HTTPHeaderContentTypeFormUrlencoded = @"application/x-www-form-urlencoded";
 static NSString *const HTTPHeaderContentTypeJson = @"application/json";
 
+//255 HFS+ filename limit - 5 for file extension suffix
+static NSInteger const MaxBaseFilenameLength = 255 - 5;
+
 #pragma mark -
 
 @interface VOKMockUrlProtocolResponseAndDataContainer : NSObject
@@ -90,7 +93,15 @@ static NSString *const HTTPHeaderContentTypeJson = @"application/json";
     
     // If there's a query string, append ? and the query string.
     if (self.request.URL.query) {
-        [resourceName appendFormat:@"?%@", self.request.URL.query];
+        //test to see if the query string would make the filename too long
+        NSInteger filenameLength = resourceName.length + 1 + self.request.URL.query.length;
+        if (filenameLength < MaxBaseFilenameLength) {
+            [resourceName appendFormat:@"?%@", self.request.URL.query];
+        } else {
+            //use the SHA-256 hash of the query and append that instead
+            NSData *queryData = [self.request.URL.query dataUsingEncoding:NSUTF8StringEncoding];
+            [resourceName appendFormat:@"?%@", [self sha256HexOfData:queryData]];
+        }
     }
     
     NSArray *resourceNames;

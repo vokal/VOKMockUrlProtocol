@@ -21,6 +21,7 @@ The base name consists of:
 - if there is a query string:
 	- a question mark `?`
 	- the query string (it is expected that the keys and values in a standard query string will be [percent-encoded](http://en.wikipedia.org/wiki/Percent-encoding) )
+    - if the query string would make the filename too long for HFS+ (255 character max) the SHA-256 hash of the query will be used instead
 - if there is a request body:
 	- a pipe character `|`
 	- the encoding of the request body, [as described below](#request-body)
@@ -54,6 +55,22 @@ Accept: */*
 yields the base name
 ```
 GET|-foo-?page=2
+```
+
+---
+
+The request
+
+```
+GET /details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25" HTTP/1.1
+Host: example.com
+Accept: */*
+
+```
+
+yields the base name
+```
+GET|-details?fb73ef92daa60d3b526724dd5f50738e8477d10e0edcf96ce79794666f6b0c0e
 ```
 
 ---
