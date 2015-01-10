@@ -1,7 +1,7 @@
 VOKMockUrlProtocol
 ==================
 
-[![CI Status](http://img.shields.io/travis/vokalinteractive/VOKMockUrlProtocol.svg?style=flat)](https://travis-ci.org/vokalinteractive/VOKMockUrlProtocol)
+[![CI Status](http://img.shields.io/travis/vokal/VOKMockUrlProtocol.svg?style=flat)](https://travis-ci.org/vokal/VOKMockUrlProtocol)
 [![Version](https://img.shields.io/cocoapods/v/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
 [![License](https://img.shields.io/cocoapods/l/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
 [![Platform](https://img.shields.io/cocoapods/p/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
