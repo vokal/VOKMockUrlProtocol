@@ -2,7 +2,7 @@
 //  VOKMockUrlProtocol.m
 //
 //  Created by Isaac Greenspan on 7/31/14.
-//  Copyright (c) 2014 VOKAL Interactive. All rights reserved.
+//  Copyright (c) 2014 Vokal. All rights reserved.
 //
 
 #import "VOKMockUrlProtocol.h"
