@@ -2,7 +2,7 @@
 //  VOKMockUrlProtocol.m
 //
 //  Created by Isaac Greenspan on 7/31/14.
-//  Copyright (c) 2014 VOKAL Interactive. All rights reserved.
+//  Copyright (c) 2014 Vokal. All rights reserved.
 //
 
 #import "VOKMockUrlProtocol.h"
@@ -12,6 +12,7 @@
 #import <HTTPStatusCodes.h>
 #import <HTTPMethods.h>
 #import <VOKBenkode.h>
+#import <sys/syslimits.h>
 
 #ifndef DLOG
     // Define DLOG to log to NSLog when DEBUG is defined
@@ -29,6 +30,9 @@ static NSString *const AppendSeparatorFormat = @"|%@";
 static NSString *const HTTPHeaderContentType = @"Content-type";
 static NSString *const HTTPHeaderContentTypeFormUrlencoded = @"application/x-www-form-urlencoded";
 static NSString *const HTTPHeaderContentTypeJson = @"application/json";
+
+//255 HFS+ filename limit - 5 for file extension suffix
+static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
 
 #pragma mark -
 
@@ -88,12 +92,18 @@ static NSString *const HTTPHeaderContentTypeJson = @"application/json";
     // Append separator and the path.
     [resourceName appendFormat:AppendSeparatorFormat, self.request.URL.path];
     
+    NSMutableArray *resourceNames = [NSMutableArray arrayWithObject:resourceName];
+    
     // If there's a query string, append ? and the query string.
     if (self.request.URL.query) {
-        [resourceName appendFormat:@"?%@", self.request.URL.query];
+        NSString *queryFormat = @"?%@";
+        //take the SHA-256 hash of the query, just in case things get too long later
+        NSData *queryData = [self.request.URL.query dataUsingEncoding:NSUTF8StringEncoding];
+        NSString *hashedQuery = [self sha256HexOfData:queryData];
+        [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy]];
+        
+        [resourceName appendFormat:queryFormat, self.request.URL.query];
     }
-    
-    NSArray *resourceNames;
     
     // If the request is one that can have a body...
     if ([kHTTPMethodPost isEqualToString:self.request.HTTPMethod]
@@ -102,45 +112,46 @@ static NSString *const HTTPHeaderContentTypeJson = @"application/json";
         NSData *bodyData = [self bodyDataFromRequest:self.request];
         
         // Compute the SHA-256 of the body and generate a resource name from that.
-        NSMutableString *hashResourceName = [resourceName mutableCopy];
-        [hashResourceName appendFormat:AppendSeparatorFormat, [self sha256HexOfData:bodyData]];
+        NSString *bodyHash = [self sha256HexOfData:bodyData];
         
         NSString *contentType = [self.request valueForHTTPHeaderField:HTTPHeaderContentType];
         
+        NSString *bodyString;
         if ([HTTPHeaderContentTypeFormUrlencoded isEqualToString:contentType]) {
             // If it's form-URL-encoded, generate a resource name by appending the body as a string.
-            NSString *bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
-            [resourceName appendFormat:AppendSeparatorFormat, bodyString];
-            resourceNames = @[ resourceName, hashResourceName, ];
+            bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
             
         } else if ([HTTPHeaderContentTypeJson isEqualToString:contentType]) {
-            // Otherwise, if it's JSON, generate a resource name by bencoding the JSON datastructure and percent-
-            // escaping the resulting string.
+            // Otherwise, if it's JSON, generate a resource name by bencoding the JSON datastructure and
+            // percent-escaping the resulting string.
             NSData *bencoded = [VOKBenkode encode:
                                 [NSJSONSerialization JSONObjectWithData:bodyData
                                                                 options:NSJSONReadingAllowFragments
                                                                   error:NULL]];
             if (bencoded) {
-                [resourceName appendFormat:AppendSeparatorFormat,
-                 [[[NSString alloc] initWithData:bencoded encoding:NSUTF8StringEncoding]
-                  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-                resourceNames = @[ resourceName, hashResourceName, ];
-            } else {
-                // If the bencode fails (or the JSON-decode fails), just use the hash resource name.
-                resourceNames = @[ hashResourceName, ];
+                bodyString = [[NSString alloc] initWithData:bencoded encoding:NSUTF8StringEncoding];
+                bodyString = [bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
             }
-            
-        } else {
-            // Otherwise, just use the hash resource name.
-            resourceNames = @[ hashResourceName, ];
         }
         
-    } else {
-        // Otherwise, the only possible name is what we have so far.
-        resourceNames = @[ resourceName, ];
+        NSArray *resourceNamesWithoutBody = [resourceNames copy];
+        [resourceNames removeAllObjects];
+        for (NSMutableString *name in resourceNamesWithoutBody) {
+            if (bodyString) {
+                [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyString] mutableCopy]];
+            }
+            [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyHash] mutableCopy]];
+        }
     }
     
-    for (NSMutableString *name in resourceNames) {
+    for (NSMutableString *name in [resourceNames copy]) {
+        
+        //test to see if the filename is too long
+        if (name.length > MaxBaseFilenameLength) {
+            [resourceNames removeObject:name];
+            continue;
+        }
+        
         [self replacePathSeparatorsInMutableString:name];
     }
     
