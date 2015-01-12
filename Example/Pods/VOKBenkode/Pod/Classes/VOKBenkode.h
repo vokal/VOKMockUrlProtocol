@@ -39,6 +39,10 @@ enum {
     VOKBenkodeErrorNumberInvalid,
 } VOKBenkodeErrorCodes;
 
+typedef NS_OPTIONS(NSUInteger, VOKBenkodeDecodeOptions) {
+    VOKBenkodeDecodeOptionStrict = 1 << 0,
+};
+
 /**
  *  Provides bencode and bdecode services as class methods.
  */
@@ -105,6 +109,22 @@ enum {
  *  dictionary (NSArray or NSDictionary) containing strings, integers, lists, and dictionaries.
  *
  *  @param data           The data to decode
+ *  @param options        The options for decoding
+ *  @param stringEncoding The encoding to use when converting NSData objects to NSString objects
+ *  @param error          If an error occurs, upon return contains an NSError object that describes the problem
+ *
+ *  @return The bdecoded object, or nil on error
+ */
++ (id)decode:(NSData *)data
+     options:(VOKBenkodeDecodeOptions)options
+stringEncoding:(NSStringEncoding)stringEncoding
+       error:(NSError **)error;
+
+/**
+ *  Bdecode data that was bencoded.  The resulting object will be a string (NSString), integer (NSNumber), or list or
+ *  dictionary (NSArray or NSDictionary) containing strings, integers, lists, and dictionaries.
+ *
+ *  @param data           The data to decode
  *  @param stringEncoding The encoding to use when converting NSData objects to NSString objects
  *  @param error          If an error occurs, upon return contains an NSError object that describes the problem
  *
@@ -116,7 +136,22 @@ stringEncoding:(NSStringEncoding)stringEncoding
 
 /**
  *  Bdecode data that was bencoded, decoding any strings with NSUTF8StringEncoding.  The resulting object will be a
- *  string (NSString), integer (NSNumber), or list or dictionary (NSArray or NSDictionary) containing strings, 
+ *  string (NSString), integer (NSNumber), or list or dictionary (NSArray or NSDictionary) containing strings,
+ *  integers, lists, and dictionaries.
+ *
+ *  @param data    The data to decode
+ *  @param options The options for decoding
+ *  @param error   If an error occurs, upon return contains an NSError object that describes the problem
+ *
+ *  @return The bdecoded object, or nil on error
+ */
++ (id)decode:(NSData *)data
+     options:(VOKBenkodeDecodeOptions)options
+       error:(NSError **)error;
+
+/**
+ *  Bdecode data that was bencoded, decoding any strings with NSUTF8StringEncoding.  The resulting object will be a
+ *  string (NSString), integer (NSNumber), or list or dictionary (NSArray or NSDictionary) containing strings,
  *  integers, lists, and dictionaries.
  *
  *  @param data  The data to decode

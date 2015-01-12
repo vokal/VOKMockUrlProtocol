@@ -209,10 +209,11 @@ static NSComparisonResult CompareNSData(NSData *obj1, NSData *obj2)
 
 #pragma mark - Decoding
 
-+ (id)decode:(NSData *)data
++(id)decode:(NSData *)data
+    options:(VOKBenkodeDecodeOptions)options
 stringEncoding:(NSStringEncoding)stringEncoding
-       error:(NSError **)error
-      length:(NSUInteger *)length
+      error:(NSError **)error
+     length:(NSUInteger *)length
 {
     if (!data.length) {
         if (error) {
@@ -227,18 +228,21 @@ stringEncoding:(NSStringEncoding)stringEncoding
     switch (firstByte) {
         case DictionaryStartDelimiter:
             return [self decodeDict:data
+                            options:options
                      stringEncoding:stringEncoding
                               error:error
                              length:length];
             
         case ArrayStartDelimiter:
             return [self decodeArray:data
+                             options:options
                       stringEncoding:stringEncoding
                                error:error
                               length:length];
             
         case NumberStartDelimiter:
             return [self decodeNumber:data
+                              options:options
                                 error:error
                                length:length];
             
@@ -253,6 +257,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
         case '8':
         case '9':
             return [self decodeString:data
+                              options:options
                        stringEncoding:stringEncoding
                                 error:error
                                length:length];
@@ -268,13 +273,35 @@ stringEncoding:(NSStringEncoding)stringEncoding
 }
 
 + (id)decode:(NSData *)data
+     options:(VOKBenkodeDecodeOptions)options
 stringEncoding:(NSStringEncoding)stringEncoding
        error:(NSError **)error
 {
     return [self decode:data
+                options:options
          stringEncoding:stringEncoding
                   error:error
                  length:NULL];
+}
+
++ (id)decode:(NSData *)data
+stringEncoding:(NSStringEncoding)stringEncoding
+       error:(NSError **)error
+{
+    return [self decode:data
+                options:0
+         stringEncoding:stringEncoding
+                  error:error];
+}
+
++ (id)decode:(NSData *)data
+     options:(VOKBenkodeDecodeOptions)options
+       error:(NSError **)error
+{
+    return [self decode:data
+                options:options
+         stringEncoding:NSUTF8StringEncoding
+                  error:error];
 }
 
 + (id)decode:(NSData *)data
@@ -302,6 +329,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
 #pragma mark Decoding Primitives
 
 + (NSDictionary *)decodeDict:(NSData *)data
+                     options:(VOKBenkodeDecodeOptions)options
               stringEncoding:(NSStringEncoding)stringEncoding
                        error:(NSError **)error
                       length:(NSUInteger *)length
@@ -315,6 +343,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
         NSError *innerError;
         NSUInteger innerLength;
         id innerKey = [self decode:[data subdataWithRange:NSMakeRange(index, data.length - index)]
+                           options:options
                     stringEncoding:stringEncoding
                              error:&innerError
                             length:&innerLength];
@@ -326,7 +355,8 @@ stringEncoding:(NSStringEncoding)stringEncoding
         }
         
         // Is the key a string?
-        if (![innerKey isKindOfClass:[NSString class]]) {
+        if ((options & VOKBenkodeDecodeOptionStrict)
+            && ![innerKey isKindOfClass:[NSString class]]) {
             // Accoding to the bencode spec, dictionary keys must be strings.
             if (error) {
                 *error = [NSError errorWithDomain:VOKBenkodeErrorDomain
@@ -348,6 +378,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
         
         index += innerLength;
         id innerValue = [self decode:[data subdataWithRange:NSMakeRange(index, data.length - index)]
+                             options:options
                       stringEncoding:stringEncoding
                                error:&innerError
                               length:&innerLength];
@@ -375,6 +406,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
 }
 
 + (NSArray *)decodeArray:(NSData *)data
+                 options:(VOKBenkodeDecodeOptions)options
           stringEncoding:(NSStringEncoding)stringEncoding
                    error:(NSError **)error
                   length:(NSUInteger *)length
@@ -388,6 +420,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
         NSError *innerError;
         NSUInteger innerLength;
         id innerObject = [self decode:[data subdataWithRange:NSMakeRange(index, data.length - index)]
+                              options:options
                        stringEncoding:stringEncoding
                                 error:&innerError
                                length:&innerLength];
@@ -415,6 +448,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
 }
 
 + (NSNumber *)decodeNumber:(NSData *)data
+                   options:(VOKBenkodeDecodeOptions)options
                      error:(NSError **)error
                     length:(NSUInteger *)length
 {
@@ -462,8 +496,11 @@ stringEncoding:(NSStringEncoding)stringEncoding
     
     // Did we get actual digits that weren't unnecessarily zero-padded?
     if (![buffer stringByTrimmingCharactersInSet:[asciiDigits invertedSet]].length
-        || (buffer.length > 1 && [buffer characterAtIndex:0] == '0')
-        || [buffer hasPrefix:@"-0"]
+        || ((options & VOKBenkodeDecodeOptionStrict)
+            && ((buffer.length > 1 && [buffer characterAtIndex:0] == '0')
+                || [buffer hasPrefix:@"-0"]
+                )
+            )
         ) {
         if (error) {
             *error = [NSError errorWithDomain:VOKBenkodeErrorDomain
@@ -480,6 +517,7 @@ stringEncoding:(NSStringEncoding)stringEncoding
 }
 
 + (NSString *)decodeString:(NSData *)data
+                   options:(VOKBenkodeDecodeOptions)options
             stringEncoding:(NSStringEncoding)stringEncoding
                      error:(NSError **)error
                     length:(NSUInteger *)length
@@ -527,7 +565,8 @@ stringEncoding:(NSStringEncoding)stringEncoding
     NSUInteger stringLength = (NSUInteger)llStringLength;
     
     // Is the string length properly formatted (no leading 0s, etc.)?
-    if (![buffer isEqualToString:[NSString stringWithFormat:@"%@", @(stringLength)]]) {
+    if ((options & VOKBenkodeDecodeOptionStrict)
+        && ![buffer isEqualToString:[NSString stringWithFormat:@"%@", @(stringLength)]]) {
         if (error) {
             *error = [NSError errorWithDomain:VOKBenkodeErrorDomain
                                          code:VOKBenkodeErrorStringLengthMalformed
