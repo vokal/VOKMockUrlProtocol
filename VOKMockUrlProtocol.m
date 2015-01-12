@@ -92,7 +92,7 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     // Append separator and the path.
     [resourceName appendFormat:AppendSeparatorFormat, self.request.URL.path];
     
-    NSMutableArray *resourceNames = [NSMutableArray arrayWithArray:@[resourceName]];
+    NSMutableArray *resourceNames = [NSMutableArray arrayWithObject:resourceName];
     
     // If there's a query string, append ? and the query string.
     if (self.request.URL.query) {
