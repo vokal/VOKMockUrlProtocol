@@ -1,15 +1,11 @@
 # VOKBenkode
 
-[![CI Status](http://img.shields.io/travis/vokalinteractive/VOKBenkode.svg?style=flat)](https://travis-ci.org/vokalinteractive/VOKBenkode)
+[![CI Status](http://img.shields.io/travis/vokal/VOKBenkode.svg?style=flat)](https://travis-ci.org/vokal/VOKBenkode)
 [![Version](https://img.shields.io/cocoapods/v/VOKBenkode.svg?style=flat)](http://cocoadocs.org/docsets/VOKBenkode)
 [![License](https://img.shields.io/cocoapods/l/VOKBenkode.svg?style=flat)](http://cocoadocs.org/docsets/VOKBenkode)
 [![Platform](https://img.shields.io/cocoapods/p/VOKBenkode.svg?style=flat)](http://cocoadocs.org/docsets/VOKBenkode)
 
 VOKBenkode provides [bencoding/bdecoding](https://wiki.theory.org/BitTorrentSpecification#Bencoding) in Objective-C.
-
-## Usage
-
-To run the example project, clone the repo, and run `pod install` from the Example directory first.
 
 ## Installation
 
@@ -20,7 +16,7 @@ it, simply add the following line to your Podfile:
 
 ## License
 
-VOKBenkode is available under the MIT. See [the LICENSE file](LICENSE) for more info.
+VOKBenkode is available under the MIT license. See [the LICENSE file](LICENSE) for more info.
 
 ## Unit Tests
 
