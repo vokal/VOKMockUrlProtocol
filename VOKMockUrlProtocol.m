@@ -117,11 +117,11 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
         NSString *contentType = [self.request valueForHTTPHeaderField:HTTPHeaderContentType];
         
         NSString *bodyString;
-        if ([HTTPHeaderContentTypeFormUrlencoded isEqualToString:contentType]) {
+        if ([contentType hasPrefix:HTTPHeaderContentTypeFormUrlencoded]) {
             // If it's form-URL-encoded, generate a resource name by appending the body as a string.
             bodyString = [[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding];
             
-        } else if ([HTTPHeaderContentTypeJson isEqualToString:contentType]) {
+        } else if ([contentType hasPrefix:HTTPHeaderContentTypeJson]) {
             // Otherwise, if it's JSON, generate a resource name by bencoding the JSON datastructure and
             // percent-escaping the resulting string.
             NSData *bencoded = [VOKBenkode encode:
