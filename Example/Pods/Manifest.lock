@@ -2,7 +2,7 @@ PODS:
   - AFNetworking/Serialization (2.5.0)
   - ILGHttpConstants (1.0.0)
   - VOKBenkode (0.2.1)
-  - VOKMockUrlProtocol (2.0.2):
+  - VOKMockUrlProtocol (2.0.3):
     - ILGHttpConstants (~> 1.0.0)
     - VOKBenkode (~> 0.2.1)
 
@@ -18,6 +18,6 @@ SPEC CHECKSUMS:
   AFNetworking: 0f54cb5d16ce38c1b76948faffb8d5fb705021c7
   ILGHttpConstants: 6e9661f7011c8b0dee57440e1e4c1a65ecfc0e6d
   VOKBenkode: 237416420e36f2f2da93f06f2db50f85a5250df7
-  VOKMockUrlProtocol: 21000af8985d97f13f423ece8fb90984cfa9b2a1
+  VOKMockUrlProtocol: 58219b56a99cc00a19f945a19dc32f6ec2102979
 
-COCOAPODS: 0.35.0
+COCOAPODS: 0.34.4
