@@ -71,7 +71,7 @@ In order to get `NSURLSesssion` to use `VOKMockUrlProtocol`, you must insert its
 Example:
 ```
     Class mockURLProtocol = [VOKMockUrlProtocol class];
-    NSMutableArray *currentProtocolClasses = [self.sessionConfiguration.protocolClasses mutableCopy];
+    NSMutableArray *currentProtocolClasses = [self.sessionConfiguration.protocolClasses mutableCopy] ?: [NSMutableArray array];
     [currentProtocolClasses insertObject:mockURLProtocol atIndex:0];
     self.sessionConfiguration.protocolClasses = currentProtocolClasses;
 ```
