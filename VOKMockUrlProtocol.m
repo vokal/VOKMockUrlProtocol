@@ -23,7 +23,7 @@
     #endif
 #endif
 
-static NSString *const MockDataDirectory = @"VOKMockData";
+static NSString *const DefaultMockDataDirectory = @"VOKMockData";
 
 static NSString *const AppendSeparatorFormat = @"|%@";
 
@@ -48,6 +48,19 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
 #pragma mark -
 
 @implementation VOKMockUrlProtocol
+
+- (instancetype)initWithRequest:(NSURLRequest *)request
+                 cachedResponse:(NSCachedURLResponse *)cachedResponse
+                         client:(id<NSURLProtocolClient>)client
+{
+    if (self = [super initWithRequest:request
+                       cachedResponse:cachedResponse
+                               client:client]) {
+        self.mockDataDirectory = DefaultMockDataDirectory;
+    }
+    
+    return self;
+}
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
 {
@@ -314,7 +327,7 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     for (NSString *resourceName in resourceNames) {
         filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
                                                                     ofType:@"http"
-                                                               inDirectory:MockDataDirectory];
+                                                               inDirectory:self.mockDataDirectory];
         NSString *fileContents = [NSString stringWithContentsOfFile:filePath
                                                            encoding:NSUTF8StringEncoding
                                                               error:NULL];
@@ -329,7 +342,7 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     for (NSString *resourceName in resourceNames) {
         filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
                                                                     ofType:@"json"
-                                                               inDirectory:MockDataDirectory];
+                                                               inDirectory:self.mockDataDirectory];
         NSData *data = [NSData dataWithContentsOfFile:filePath];
         if (data) {
             // We've got a JSON data file, so send it.
