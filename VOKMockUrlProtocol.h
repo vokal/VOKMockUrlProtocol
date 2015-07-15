@@ -16,6 +16,8 @@
  *  Mock data should go into a directory with the name defined in this string.
  *  It defaults to "VOKMockData", but its default can be overwritten by subclassing
  *  VOKMockUrlProtocol and overriding - initWithRequest:cachedResponse:client.
+ *
+ *  If set to nil, this property will default to VOKMockData
  */
 @property (copy, nonatomic) NSString *mockDataDirectory;
 

@@ -49,17 +49,13 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
 
 @implementation VOKMockUrlProtocol
 
-- (instancetype)initWithRequest:(NSURLRequest *)request
-                 cachedResponse:(NSCachedURLResponse *)cachedResponse
-                         client:(id<NSURLProtocolClient>)client
+- (NSString *)mockDataDirectory
 {
-    if (self = [super initWithRequest:request
-                       cachedResponse:cachedResponse
-                               client:client]) {
-        self.mockDataDirectory = DefaultMockDataDirectory;
+    if (_mockDataDirectory == nil) {
+        return DefaultMockDataDirectory;
     }
     
-    return self;
+    return _mockDataDirectory;
 }
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
