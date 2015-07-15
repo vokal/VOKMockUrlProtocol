@@ -17,6 +17,6 @@
  *  It defaults to "VOKMockData", but its default can be overwritten by subclassing
  *  VOKMockUrlProtocol and overriding - initWithRequest:cachedResponse:client.
  */
-@property (strong, nonatomic) NSString *mockDataDirectory;
+@property (copy, nonatomic) NSString *mockDataDirectory;
 
 @end
