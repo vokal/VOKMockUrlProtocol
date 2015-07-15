@@ -62,6 +62,15 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     return self;
 }
 
+- (void)setMockDataDirectory:(NSString *)mockDataDirectory
+{
+    _mockDataDirectory = [mockDataDirectory copy];
+    
+    if (_mockDataDirectory == nil) {
+        _mockDataDirectory = DefaultMockDataDirectory;
+    }
+}
+
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
 {
     return YES;
