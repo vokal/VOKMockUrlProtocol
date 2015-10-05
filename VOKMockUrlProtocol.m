@@ -9,9 +9,9 @@
 
 #import <CommonCrypto/CommonDigest.h>
 
-#import <HTTPStatusCodes.h>
-#import <HTTPMethods.h>
-#import <VOKBenkode.h>
+#import <ILGHttpConstants/HTTPStatusCodes.h>
+#import <ILGHttpConstants/HTTPMethods.h>
+#import <VOKBenkode/VOKBenkode.h>
 #import <sys/syslimits.h>
 
 #ifndef DLOG
