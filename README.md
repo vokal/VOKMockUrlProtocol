@@ -82,3 +82,7 @@ In order to switch back and forth between mock and live, you can also take out t
     [currentProtocolClasses removeObject:mockURLProtocol];
     self.sessionConfiguration.protocolClasses = currentProtocolClasses;
   ```
+  
+### Using with Frameworks/Swift
+
+When `VOKMockURLProtocol` is built as a framework (usually for use with Swift), make sure to call the `setTestBundle:` class method and pass in your test bundle. Since the default behavior is to fall back to the bundle for the current class, that would look in the Framework's bundle rather than the test bundle, and nothing would work.
