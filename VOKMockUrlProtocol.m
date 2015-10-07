@@ -49,6 +49,12 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
 
 @implementation VOKMockUrlProtocol
 
+static NSBundle *testBundle = nil;
++ (void)setTestBundle:(NSBundle *)bundle
+{
+    testBundle = bundle;
+}
+
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
 {
     return YES;
@@ -312,9 +318,13 @@ static NSInteger const MaxBaseFilenameLength = NAME_MAX - 5;
     
     // First, look for a complete-HTTP-response file.
     for (NSString *resourceName in resourceNames) {
-        filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
-                                                                    ofType:@"http"
-                                                               inDirectory:MockDataDirectory];
+        if (!testBundle) {
+            testBundle = [NSBundle bundleForClass:[self class]];
+        }        
+        
+        filePath = [testBundle pathForResource:resourceName
+                                        ofType:@"http"
+                                   inDirectory:MockDataDirectory];
         NSString *fileContents = [NSString stringWithContentsOfFile:filePath
                                                            encoding:NSUTF8StringEncoding
                                                               error:NULL];
