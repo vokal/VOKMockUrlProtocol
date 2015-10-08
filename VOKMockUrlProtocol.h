@@ -14,10 +14,10 @@
 
 /**
  *  Sets a custom test bundle to use to look for the mock data files. Primarily useful 
- *  when VOKMockURLProtocol is being used as a framework (for example, with Swift).
+ *  when VOKMockUrlProtocol is being used as a framework (for example, with Swift).
  *
- *  @param bundle The test bundle to use.
+ *  @param bundle The test bundle to use, or nil to reset to the bundle VOKMockUrlProtocol is in.
  */
-+ (void)setTestBundle:(__nonnull NSBundle *)bundle;
++ (void)setTestBundle:(NSBundle *)bundle;
 
 @end
