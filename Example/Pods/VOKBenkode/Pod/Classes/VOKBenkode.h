@@ -37,7 +37,7 @@ enum {
     VOKBenkodeErrorDictionaryDuplicateKey,
     /// A number is not valid.
     VOKBenkodeErrorNumberInvalid,
-} VOKBenkodeErrorCodes;
+};
 
 typedef NS_OPTIONS(NSUInteger, VOKBenkodeDecodeOptions) {
     VOKBenkodeDecodeOptionStrict = 1 << 0,
