@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 
-#import <AFNetworking/AFURLRequestSerialization.h>
 #import <HTTPMethods.h>
 #import <HTTPStatusCodes.h>
 #import <VOKMockUrlProtocol.h>
@@ -35,16 +34,45 @@
     [super tearDown];
 }
 
+- (NSURLRequest *)POSTRequestWithURLString:(NSString *)URLString
+                                      body:(NSDictionary *)bodyParameters
+                                    asJSON:(BOOL)bodyAsJSON
+{
+    NSURL *url = [NSURL URLWithString:URLString];
+
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    request.HTTPMethod = kHTTPMethodPost;
+    
+    if (bodyAsJSON) {
+        [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        request.HTTPBody = [NSJSONSerialization dataWithJSONObject:bodyParameters
+                                                           options:0
+                                                             error:NULL];
+    } else {
+        //body as form data
+        [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+
+        NSMutableArray *pairs = [NSMutableArray array];
+        [bodyParameters enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *obj, BOOL *stop) {
+            NSString *pair = [NSString stringWithFormat:@"%@=%@", key.description, obj.description];
+            [pairs addObject:pair];
+        }];
+        NSString *bodyString = [pairs componentsJoinedByString:@"&"];
+
+        request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
+    }
+    
+    return request;
+}
+
+
 - (void)testPostFormDictionary
 {
-    AFHTTPRequestSerializer *serializer = [AFHTTPRequestSerializer serializer];
-    
-    NSURLRequest *request = [serializer requestWithMethod:kHTTPMethodPost
-                                                URLString:@"http://example.com/"
-                                               parameters:@{
-                                                            @"foo": @"bar",
-                                                            }
-                                                    error:NULL];
+    NSURLRequest *request = [self POSTRequestWithURLString:@"http://example.com/"
+                                                      body:@{
+                                                             @"foo": @"bar",
+                                                             }
+                                                    asJSON:NO];
     NSError *error;
     NSHTTPURLResponse *response;
     NSData *data = [NSURLConnection sendSynchronousRequest:request
@@ -62,14 +90,11 @@
 
 - (void)testPostJsonDictionary
 {
-    AFJSONRequestSerializer *serializer = [AFJSONRequestSerializer serializer];
-    
-    NSURLRequest *request = [serializer requestWithMethod:kHTTPMethodPost
-                                                URLString:@"http://example.com/"
-                                               parameters:@{
-                                                            @"foo": @"bar",
-                                                            }
-                                                    error:NULL];
+    NSURLRequest *request = [self POSTRequestWithURLString:@"http://example.com/"
+                                                      body:@{
+                                                             @"foo": @"bar",
+                                                             }
+                                                    asJSON:YES];
     NSError *error;
     NSHTTPURLResponse *response;
     NSData *data = [NSURLConnection sendSynchronousRequest:request
@@ -87,14 +112,12 @@
 
 - (void)testPostJsonDictionaryHash
 {
-    AFJSONRequestSerializer *serializer = [AFJSONRequestSerializer serializer];
-    
-    NSURLRequest *request = [serializer requestWithMethod:kHTTPMethodPost
-                                                URLString:@"http://example.com/"
-                                               parameters:@{
-                                                            @"foo": @"baz",
-                                                            }
-                                                    error:NULL];
+    NSURLRequest *request = [self POSTRequestWithURLString:@"http://example.com/"
+                                                      body:@{
+                                                             @"foo": @"baz",
+                                                             }
+                                                    asJSON:YES];
+
     NSError *error;
     NSHTTPURLResponse *response;
     NSData *data = [NSURLConnection sendSynchronousRequest:request
