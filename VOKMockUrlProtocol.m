@@ -140,7 +140,10 @@ static NSBundle *testBundle = nil;
                     NSCharacterSet *allowedCharacters = NSCharacterSet.URLQueryAllowedCharacterSet;
                     bodyString = [bodyString stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
                 } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                     bodyString = [bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+#pragma clang diagnostic pop
                 }
             }
         }
