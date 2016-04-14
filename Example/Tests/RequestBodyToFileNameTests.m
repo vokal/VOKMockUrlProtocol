@@ -65,6 +65,25 @@
     return request;
 }
 
+- (void)verifyRequest:(NSURLRequest *)request
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:NSStringFromSelector(_cmd)];
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *urlResponse, NSError *error) {
+        if (!data) {
+            XCTFail();
+            return;
+        }
+        XCTAssertNil(error);
+        NSHTTPURLResponse *response = (NSHTTPURLResponse *)urlResponse;
+        XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+        XCTAssertEqual(response.allHeaderFields.count, 0);
+        XCTAssertEqual(data.length, 0);
+        
+        [expectation fulfill];
+    }] resume];
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
 
 - (void)testPostFormDictionary
 {
@@ -73,19 +92,7 @@
                                                              @"foo": @"bar",
                                                              }
                                                     asJSON:NO];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequest:request];
 }
 
 - (void)testPostJsonDictionary
@@ -95,19 +102,7 @@
                                                              @"foo": @"bar",
                                                              }
                                                     asJSON:YES];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequest:request];
 }
 
 - (void)testPostJsonDictionaryHash
@@ -117,20 +112,7 @@
                                                              @"foo": @"baz",
                                                              }
                                                     asJSON:YES];
-
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequest:request];
 }
 
 @end
