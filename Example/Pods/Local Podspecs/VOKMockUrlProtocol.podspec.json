@@ -8,7 +8,7 @@
     "file": "LICENSE"
   },
   "authors": {
-    "Vokal": "hello@vokalinteractive.com"
+    "Vokal": "ios@vokal.io"
   },
   "source": {
     "git": "https://github.com/vokal/VOKMockUrlProtocol.git",

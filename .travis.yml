@@ -1,7 +1,13 @@
 language: objective-c
-osx_image: xcode7
-xcode_workspace: Example/VOKMockUrlProtocol.xcworkspace
-xcode_scheme: VOKMockUrlProtocol
-xcode_sdk: iphonesimulator
+osx_image: xcode7.3
 before_install:
   - brew update > /dev/null; if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
+xcode_workspace: Example/VOKMockUrlProtocol.xcworkspace
+matrix:
+  include:
+    - xcode_scheme: VOKMockUrlProtocol
+      xcode_sdk: iphonesimulator
+    - xcode_scheme: VOKMockUrlProtocol-tvOS
+      xcode_sdk: appletvsimulator
+    - xcode_scheme: VOKMockUrlProtocol-OSX
+      xcode_sdk: macosx
