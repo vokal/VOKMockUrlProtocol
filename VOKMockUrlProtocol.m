@@ -136,7 +136,15 @@ static NSBundle *testBundle = nil;
                                                                   error:NULL]];
             if (bencoded) {
                 bodyString = [[NSString alloc] initWithData:bencoded encoding:NSUTF8StringEncoding];
-                bodyString = [bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                if ([bodyString respondsToSelector:@selector(stringByAddingPercentEncodingWithAllowedCharacters:)]) {
+                    NSCharacterSet *allowedCharacters = NSCharacterSet.URLQueryAllowedCharacterSet;
+                    bodyString = [bodyString stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
+                } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+                    bodyString = [bodyString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+#pragma clang diagnostic pop
+                }
             }
         }
         
