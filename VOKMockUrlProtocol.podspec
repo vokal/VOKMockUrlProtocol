@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary          = "A url protocol that parses and returns fake responses with mock data."
   s.homepage         = "https://github.com/vokal/VOKMockUrlProtocol"
   s.license          = { :type => "MIT", :file => "LICENSE"}
-  s.author           = { "Vokal" => "hello@vokal.io" }
+  s.author           = { "Vokal" => "ios@vokal.io" }
   s.source           = { :git => "https://github.com/vokal/VOKMockUrlProtocol.git", :tag => s.version.to_s }
 
   s.ios.deployment_target  = '6.0'
