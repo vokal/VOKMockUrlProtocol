@@ -33,88 +33,86 @@
     [super tearDown];
 }
 
+- (void)verifyRequestWithURLString:(NSString *)urlString
+                        completion:(void (^)(NSData *data, NSHTTPURLResponse *response, NSError *error))completion
+{
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:urlString]];
+    XCTestExpectation *expectation = [self expectationWithDescription:NSStringFromSelector(_cmd)];
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *urlResponse, NSError *error) {
+        completion(data, (NSHTTPURLResponse *)urlResponse, error);
+        [expectation fulfill];
+    }] resume];
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)testNonexistentFileGives404
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/DoesntExist.html"]];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequestWithURLString:@"http://example.com/DoesntExist.html"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
+                              XCTAssertEqual(data.length, 0);
+                          }];
 }
 
 - (void)testHttpFileEmpty
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/empty"]];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequestWithURLString:@"http://example.com/empty"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                              XCTAssertEqual(response.allHeaderFields.count, 0);
+                              XCTAssertEqual(data.length, 0);
+                          }];
 }
 
 - (void)testHttpFileBodyNoHeaders
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/bodyNoHeaders"]];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertNotEqual(data.length, 0);
+    [self verifyRequestWithURLString:@"http://example.com/bodyNoHeaders"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                              XCTAssertEqual(response.allHeaderFields.count, 0);
+                              XCTAssertNotEqual(data.length, 0);
+                          }];
 }
 
 - (void)testHttpFileHeadersNoBody
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/headersNoBody"]];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertNotEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequestWithURLString:@"http://example.com/headersNoBody"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                              XCTAssertNotEqual(response.allHeaderFields.count, 0);
+                              XCTAssertEqual(data.length, 0);
+                          }];
 }
 
 - (void)testHttpLongQueryFile
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://example.com/details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25"]];
-    NSError *error;
-    NSHTTPURLResponse *response;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request
-                                         returningResponse:&response
-                                                     error:&error];
-    if (!data) {
-        XCTFail();
-        return;
-    }
-    XCTAssertNil(error);
-    XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
-    XCTAssertEqual(response.allHeaderFields.count, 0);
-    XCTAssertEqual(data.length, 0);
+    [self verifyRequestWithURLString:@"http://example.com/details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                              XCTAssertEqual(response.allHeaderFields.count, 0);
+                              XCTAssertEqual(data.length, 0);
+                          }];
 }
 
 @end
