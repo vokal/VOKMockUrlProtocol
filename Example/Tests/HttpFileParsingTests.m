@@ -43,12 +43,17 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 }
 
 - (void)verifyRequestWithURLString:(NSString *)urlString
-                        authHeader:(NSString *)authHeader
+                 additionalHeaders:(NSDictionary *)additionalHeaders
                         completion:(void (^)(NSData *data, NSHTTPURLResponse *response, NSError *error))completion
 {
     NSMutableURLRequest *request = [[NSURLRequest requestWithURL:[NSURL URLWithString:urlString]] mutableCopy];
     
-    [request setValue:authHeader forHTTPHeaderField:kHTTPHeaderFieldAuthorization];
+    if (additionalHeaders) {
+        for (NSString *key in additionalHeaders) {
+            NSString *value = additionalHeaders[key];
+            [request setValue:value forHTTPHeaderField:key];
+        }
+    }
     
     XCTestExpectation *expectation = [self expectationWithDescription:NSStringFromSelector(_cmd)];
     NSURLSession *session = [NSURLSession sharedSession];
@@ -62,7 +67,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)testNonexistentFileGives404
 {
     [self verifyRequestWithURLString:@"http://example.com/DoesntExist.html"
-                          authHeader:AuthToken
+                   additionalHeaders:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
                               XCTAssertEqual(data.length, 0);
@@ -72,7 +77,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)testHttpFileEmpty
 {
     [self verifyRequestWithURLString:@"http://example.com/empty"
-                          authHeader:AuthToken
+                   additionalHeaders:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -88,7 +93,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)testHttpFileBodyNoHeaders
 {
     [self verifyRequestWithURLString:@"http://example.com/bodyNoHeaders"
-                          authHeader:AuthToken
+                   additionalHeaders:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -104,7 +109,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)testHttpFileHeadersNoBody
 {
     [self verifyRequestWithURLString:@"http://example.com/headersNoBody"
-                          authHeader:AuthToken
+                   additionalHeaders:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -120,7 +125,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)testHttpLongQueryFile
 {
     [self verifyRequestWithURLString:@"http://example.com/details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25"
-                          authHeader:AuthToken
+                   additionalHeaders:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -133,11 +138,35 @@ static NSString *const AuthToken = @"Token I_am_a_token";
                           }];
 }
 
-- (void)testHttpAuthorizationFile
+- (void)testHttpHeadersEncoding
+{
+    [VOKMockUrlProtocol setHeadersToEncode:@[
+                                             kHTTPHeaderFieldAuthorization,
+                                             kHTTPHeaderFieldContentLanguage,
+                                             ]];
+    [self verifyRequestWithURLString:@"http://example.com/auth"
+                   additionalHeaders: @{
+                                        kHTTPHeaderFieldAuthorization: AuthToken,
+                                        kHTTPHeaderFieldContentLanguage: @"en",
+                                        }
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                          }];
+}
+
+- (void)testHttpHeadersIgnoresUnencodedHeader
 {
     [VOKMockUrlProtocol setHeadersToEncode:@[kHTTPHeaderFieldAuthorization]];
     [self verifyRequestWithURLString:@"http://example.com/auth"
-                          authHeader:AuthToken
+                   additionalHeaders: @{
+                                        kHTTPHeaderFieldAuthorization: AuthToken,
+                                        kHTTPHeaderFieldContentLanguage: @"en",
+                                    }
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
