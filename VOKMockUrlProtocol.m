@@ -56,10 +56,10 @@ static NSBundle *testBundle = nil;
     testBundle = bundle;
 }
 
-static BOOL shouldEncodeAuthHeader = NO;
-+ (void)setShouldEncodeAuthHeader:(BOOL)encodeAuthHeader
+static NSArray<NSString *> *headersToEncode = nil;
++ (void)setHeadersToEncode:(NSArray<NSString *>*)headers
 {
-    shouldEncodeAuthHeader = encodeAuthHeader;
+    headersToEncode = headers;
 }
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -118,13 +118,25 @@ static BOOL shouldEncodeAuthHeader = NO;
         [resourceName appendFormat:queryFormat, self.request.URL.query];
     }
     
-    if (shouldEncodeAuthHeader) {
+    if (headersToEncode) {
         NSDictionary *headerDict = self.request.allHTTPHeaderFields;
-        NSString *authHeader = headerDict[kHTTPHeaderFieldAuthorization];
-        if (authHeader) {
-            NSString *encodedHeader = [authHeader stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-            NSString *authString = [NSString stringWithFormat:@"&authorization=%@", encodedHeader];
-            [resourceName appendString:authString];
+        NSMutableArray <NSString *>*allIncludedHeaders = [NSMutableArray array];
+        for (NSString *headerName in headersToEncode) {
+            NSString *headerValue = headerDict[headerName];
+            if (headerValue) {
+                NSString *headerString = [NSString stringWithFormat:@"%@=%@", headerName, headerValue];
+                [allIncludedHeaders addObject:headerString];
+            }
+        }
+        
+        NSString *fullHeaderString = [allIncludedHeaders componentsJoinedByString:@"&"];
+        if (fullHeaderString.length > 0) {
+            NSString *encodedHeaderString = [fullHeaderString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            NSData *fullHeaderData = [encodedHeaderString dataUsingEncoding:NSUTF8StringEncoding];
+            NSString *hashedHeaderString = [self sha256HexOfData:fullHeaderData];
+        
+            [resourceNames addObject:[[resourceName stringByAppendingFormat:AppendSeparatorFormat, hashedHeaderString] mutableCopy]];
+            [resourceName appendFormat:AppendSeparatorFormat, encodedHeaderString];
         }
     }
     

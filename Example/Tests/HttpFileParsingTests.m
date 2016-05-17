@@ -38,7 +38,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 - (void)tearDown
 {
     // Make sure the URL protocol is not encoding auth params.
-    [VOKMockUrlProtocol setShouldEncodeAuthHeader:NO];
+    [VOKMockUrlProtocol setHeadersToEncode:nil];
     [super tearDown];
 }
 
@@ -135,7 +135,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 
 - (void)testHttpAuthorizationFile
 {
-    [VOKMockUrlProtocol setShouldEncodeAuthHeader:YES];
+    [VOKMockUrlProtocol setHeadersToEncode:@[kHTTPHeaderFieldAuthorization]];
     [self verifyRequestWithURLString:@"http://example.com/auth"
                           authHeader:AuthToken
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
