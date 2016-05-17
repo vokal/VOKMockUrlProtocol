@@ -20,4 +20,12 @@
  */
 + (void)setTestBundle:(NSBundle *)bundle;
 
+/**
+ *  Allows you to encode authorizatation headers if desired. Defaults to NO.
+ *
+ *  @param encodeAuthHeader YES to encode the `Authorization` header as part of 
+ *                          the filename, NO to not do that.
+ */
++ (void)setShouldEncodeAuthHeader:(BOOL)encodeAuthHeader;
+
 @end

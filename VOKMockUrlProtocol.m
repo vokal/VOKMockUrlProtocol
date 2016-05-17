@@ -11,6 +11,7 @@
 
 #import <ILGHttpConstants/HTTPStatusCodes.h>
 #import <ILGHttpConstants/HTTPMethods.h>
+#import <ILGHttpConstants/HttpHeaderFields.h>
 #import <VOKBenkode/VOKBenkode.h>
 #import <sys/syslimits.h>
 
@@ -53,6 +54,12 @@ static NSBundle *testBundle = nil;
 + (void)setTestBundle:(NSBundle *)bundle
 {
     testBundle = bundle;
+}
+
+static BOOL shouldEncodeAuthHeader = NO;
++ (void)setShouldEncodeAuthHeader:(BOOL)encodeAuthHeader
+{
+    shouldEncodeAuthHeader = encodeAuthHeader;
 }
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -109,6 +116,16 @@ static NSBundle *testBundle = nil;
         [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy]];
         
         [resourceName appendFormat:queryFormat, self.request.URL.query];
+    }
+    
+    if (shouldEncodeAuthHeader) {
+        NSDictionary *headerDict = self.request.allHTTPHeaderFields;
+        NSString *authHeader = headerDict[kHTTPHeaderFieldAuthorization];
+        if (authHeader) {
+            NSString *encodedHeader = [authHeader stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            NSString *authString = [NSString stringWithFormat:@"&authorization=%@", encodedHeader];
+            [resourceName appendString:authString];
+        }
     }
     
     // If the request is one that can have a body...
