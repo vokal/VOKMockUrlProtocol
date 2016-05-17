@@ -44,9 +44,15 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 
 - (void)verifyRequestWithURLString:(NSString *)urlString
                  additionalHeaders:(NSDictionary *)additionalHeaders
+                          bodyData:(NSData *)bodyData
                         completion:(void (^)(NSData *data, NSHTTPURLResponse *response, NSError *error))completion
 {
     NSMutableURLRequest *request = [[NSURLRequest requestWithURL:[NSURL URLWithString:urlString]] mutableCopy];
+    
+    if (bodyData) {
+        request.HTTPMethod = @"POST";
+        request.HTTPBody = bodyData;
+    }
     
     if (additionalHeaders) {
         for (NSString *key in additionalHeaders) {
@@ -68,6 +74,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 {
     [self verifyRequestWithURLString:@"http://example.com/DoesntExist.html"
                    additionalHeaders:nil
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
                               XCTAssertEqual(data.length, 0);
@@ -78,6 +85,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 {
     [self verifyRequestWithURLString:@"http://example.com/empty"
                    additionalHeaders:nil
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -94,6 +102,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 {
     [self verifyRequestWithURLString:@"http://example.com/bodyNoHeaders"
                    additionalHeaders:nil
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -110,6 +119,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 {
     [self verifyRequestWithURLString:@"http://example.com/headersNoBody"
                    additionalHeaders:nil
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -126,6 +136,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
 {
     [self verifyRequestWithURLString:@"http://example.com/details?one=1&two=2&three=3&four=4&five=5&six=6&seven=7&eight=8&nine=9&ten=10&eleven=11&twelve=12&thirteen=13&fourteen=14&fifteen=15&sixteen=16&seventeen=17&eighteen=18&nineteen=19&twenty=20&twentyone=21&twntytwo=22&twentythree=23&twentyfour=24&twentyfive=25"
                    additionalHeaders:nil
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -149,6 +160,39 @@ static NSString *const AuthToken = @"Token I_am_a_token";
                                         kHTTPHeaderFieldAuthorization: AuthToken,
                                         kHTTPHeaderFieldContentLanguage: @"en",
                                         }
+                            bodyData:nil
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                          }];
+}
+
+- (void)testHttpHeadersWithJSONBody
+{
+    [VOKMockUrlProtocol setHeadersToEncode:@[
+                                             kHTTPHeaderFieldAuthorization,
+                                             kHTTPHeaderFieldContentLanguage,
+                                             ]];
+    
+    NSDictionary *foobar = @{ @"foo": @"bar" };
+    NSError *error = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:foobar
+                                                       options:0
+                                                         error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(jsonData);
+    
+    [self verifyRequestWithURLString:@"http://example.com/auth"
+                   additionalHeaders: @{
+                                        kHTTPHeaderFieldAuthorization: AuthToken,
+                                        kHTTPHeaderFieldContentLanguage: @"en",
+                                        kHTTPHeaderFieldContentType: @"application/json",
+                                        }
+                            bodyData:jsonData
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
@@ -167,6 +211,7 @@ static NSString *const AuthToken = @"Token I_am_a_token";
                                         kHTTPHeaderFieldAuthorization: AuthToken,
                                         kHTTPHeaderFieldContentLanguage: @"en",
                                     }
+                            bodyData:nil
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               if (!data) {
                                   XCTFail();
