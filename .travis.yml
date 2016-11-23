@@ -1,13 +1,18 @@
 language: objective-c
-osx_image: xcode7.3
-before_install:
-  - brew update > /dev/null; if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
-xcode_workspace: Example/VOKMockUrlProtocol.xcworkspace
-matrix:
-  include:
-    - xcode_scheme: VOKMockUrlProtocol
-      xcode_sdk: iphonesimulator
-    - xcode_scheme: VOKMockUrlProtocol-tvOS
-      xcode_sdk: appletvsimulator
-    - xcode_scheme: VOKMockUrlProtocol-OSX
-      xcode_sdk: macosx
+osx_image: xcode8
+env:
+  global:
+    - SCAN_SKIP_BUILD=1
+    - SCAN_WORKSPACE="Example/VOKMockUrlProtocol.xcworkspace"
+  matrix:
+    # Define the details for each test suite that should be run
+    - SCAN_SCHEME="VOKMockUrlProtocol"         SCAN_SDK="iphonesimulator"
+    - SCAN_SCHEME="VOKMockUrlProtocol-tvOS"    SCAN_SDK="appletvsimulator"
+    - SCAN_SCHEME="VOKMockUrlProtocol-OSX"     SCAN_SDK="macosx"
+script: bundle exec scan
+after_script:
+  - bundle exec pod lib lint
+git:
+  depth: 10000  # For the auto-incrementing build number script to work, we need to clone with a basically-infinite depth.
+cache:
+  - bundler  # After main-repo builds, save the "bundler" (local Ruby gems) stuff to cache for future builds.
