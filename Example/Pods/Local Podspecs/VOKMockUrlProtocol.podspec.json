@@ -23,7 +23,7 @@
   "source_files": "VOKMockUrlProtocol.[hm]",
   "dependencies": {
     "ILGHttpConstants": [
-      "~> 2.0.0"
+      "~> 2.0"
     ],
     "VOKBenkode": [
       "~> 0.3"
