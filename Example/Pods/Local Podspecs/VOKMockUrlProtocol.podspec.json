@@ -1,6 +1,6 @@
 {
   "name": "VOKMockUrlProtocol",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "summary": "A url protocol that parses and returns fake responses with mock data.",
   "homepage": "https://github.com/vokal/VOKMockUrlProtocol",
   "license": {
@@ -12,7 +12,7 @@
   },
   "source": {
     "git": "https://github.com/vokal/VOKMockUrlProtocol.git",
-    "tag": "2.2.0"
+    "tag": "2.3.0"
   },
   "platforms": {
     "ios": "6.0",
@@ -23,7 +23,7 @@
   "source_files": "VOKMockUrlProtocol.[hm]",
   "dependencies": {
     "ILGHttpConstants": [
-      "~> 1.0.0"
+      "~> 2.0.0"
     ],
     "VOKBenkode": [
       "~> 0.3"

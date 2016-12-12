@@ -1,6 +1,6 @@
 # ILGHttpConstants
 
-For Objective-C.  MIT License (to whatever extent anything in this library is copyrightable—for the most part, it probably isn't).
+For Objective-C and Swift.  MIT License (to whatever extent anything in this library is copyrightable—for the most part, it probably isn't).
 
 ## HTTPStatusCodes.h
 
