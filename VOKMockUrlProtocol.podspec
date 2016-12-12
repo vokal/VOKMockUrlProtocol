@@ -13,6 +13,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.source_files = 'VOKMockUrlProtocol.[hm]'
-  s.dependency 'ILGHttpConstants', '~> 2.0.0'
+  s.dependency 'ILGHttpConstants', '~> 2.0'
   s.dependency 'VOKBenkode', '~> 0.3'
 end
