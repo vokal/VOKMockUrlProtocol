@@ -345,9 +345,13 @@ static NSBundle *testBundle = nil;
     
     // Otherwise, look for a JSON data file.
     for (NSString *resourceName in resourceNames) {
-        filePath = [[NSBundle bundleForClass:[self class]] pathForResource:resourceName
-                                                                    ofType:@"json"
-                                                               inDirectory:MockDataDirectory];
+        if (!testBundle) {
+            testBundle = [NSBundle bundleForClass:[self class]];
+        }
+        
+        filePath = [testBundle pathForResource:resourceName
+                                        ofType:@"json"
+                                   inDirectory:MockDataDirectory];
         NSData *data = [NSData dataWithContentsOfFile:filePath];
         if (data) {
             // We've got a JSON data file, so send it.
