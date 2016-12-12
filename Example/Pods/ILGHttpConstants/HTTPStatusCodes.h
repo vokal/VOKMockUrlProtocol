@@ -4,7 +4,7 @@
 
 // Based on http://en.wikipedia.org/wiki/Http_status_codes
 
-enum HTTPStatusCodes {
+typedef NS_ENUM(NSInteger, HTTPStatusCode) {
 #pragma mark 1xx Informational
     kHTTPStatusCodeContinue = 100,
     kHTTPStatusCodeSwitchingProtocols = 101,

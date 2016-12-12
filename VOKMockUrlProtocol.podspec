@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "VOKMockUrlProtocol"
-  s.version          = "2.2.0"
+  s.version          = "2.3.0"
   s.summary          = "A url protocol that parses and returns fake responses with mock data."
   s.homepage         = "https://github.com/vokal/VOKMockUrlProtocol"
   s.license          = { :type => "MIT", :file => "LICENSE"}
@@ -13,6 +13,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.source_files = 'VOKMockUrlProtocol.[hm]'
-  s.dependency 'ILGHttpConstants', '~> 1.0.0'
+  s.dependency 'ILGHttpConstants', '~> 2.0'
   s.dependency 'VOKBenkode', '~> 0.3'
 end
