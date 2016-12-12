@@ -20,4 +20,12 @@
  */
 + (void)setTestBundle:(NSBundle *)bundle;
 
+/**
+ *  Allows you to encode authorizatation headers if desired. Defaults to nil.
+ *
+ *  @param headers The names of headers to encode as part of the file name as strings,
+ *                 or nil to not encode any headers.
+ */
++ (void)setHeadersToEncode:(NSArray<NSString *>*)headers;
+
 @end

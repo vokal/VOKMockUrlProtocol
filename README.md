@@ -86,3 +86,7 @@ In order to switch back and forth between mock and live, you can also take out t
 ### Using with Frameworks/Swift
 
 When `VOKMockUrlProtocol` is built as a framework (usually for use with Swift), make sure to call the `setTestBundle:` class method and pass in your test bundle. Since the default behavior is to fall back to the bundle for the current class, that would look in the Framework's bundle rather than the test bundle, and nothing would work.
+
+### Using with HTTP Authorization headers
+
+To verify that authorization headers are being sent properly, make sure to set `setShouldEncodeAuthHeader` to YES. This will verify that the value for the http header "Authorization" is set to an expected value. Otherwise, auth headers will not be verified. 

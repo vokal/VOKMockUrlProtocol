@@ -11,6 +11,7 @@
 
 #import <ILGHttpConstants/HTTPStatusCodes.h>
 #import <ILGHttpConstants/HTTPMethods.h>
+#import <ILGHttpConstants/HttpHeaderFields.h>
 #import <VOKBenkode/VOKBenkode.h>
 #import <sys/syslimits.h>
 
@@ -53,6 +54,12 @@ static NSBundle *testBundle = nil;
 + (void)setTestBundle:(NSBundle *)bundle
 {
     testBundle = bundle;
+}
+
+static NSArray<NSString *> *headersToEncode = nil;
++ (void)setHeadersToEncode:(NSArray<NSString *>*)headers
+{
+    headersToEncode = headers;
 }
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -109,6 +116,28 @@ static NSBundle *testBundle = nil;
         [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy]];
         
         [resourceName appendFormat:queryFormat, self.request.URL.query];
+    }
+    
+    if (headersToEncode) {
+        NSDictionary *headerDict = self.request.allHTTPHeaderFields;
+        NSMutableArray <NSString *>*allIncludedHeaders = [NSMutableArray array];
+        for (NSString *headerName in headersToEncode) {
+            NSString *headerValue = headerDict[headerName];
+            if (headerValue) {
+                NSString *headerString = [NSString stringWithFormat:@"%@=%@", headerName, headerValue];
+                [allIncludedHeaders addObject:headerString];
+            }
+        }
+        
+        NSString *fullHeaderString = [allIncludedHeaders componentsJoinedByString:@"&"];
+        if (fullHeaderString.length > 0) {
+            NSString *encodedHeaderString = [fullHeaderString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            NSData *fullHeaderData = [encodedHeaderString dataUsingEncoding:NSUTF8StringEncoding];
+            NSString *hashedHeaderString = [self sha256HexOfData:fullHeaderData];
+        
+            [resourceNames addObject:[[resourceName stringByAppendingFormat:AppendSeparatorFormat, hashedHeaderString] mutableCopy]];
+            [resourceName appendFormat:AppendSeparatorFormat, encodedHeaderString];
+        }
     }
     
     // If the request is one that can have a body...
