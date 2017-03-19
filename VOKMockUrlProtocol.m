@@ -324,12 +324,12 @@ static NSBundle *testBundle = nil;
     NSArray *resourceNames = [self resourceNames];
     NSString *filePath;
     
+    if (!testBundle) {
+        testBundle = [NSBundle bundleForClass:[self class]];
+    }
+    
     // First, look for a complete-HTTP-response file.
     for (NSString *resourceName in resourceNames) {
-        if (!testBundle) {
-            testBundle = [NSBundle bundleForClass:[self class]];
-        }        
-        
         filePath = [testBundle pathForResource:resourceName
                                         ofType:@"http"
                                    inDirectory:MockDataDirectory];
@@ -345,10 +345,6 @@ static NSBundle *testBundle = nil;
     
     // Otherwise, look for a JSON data file.
     for (NSString *resourceName in resourceNames) {
-        if (!testBundle) {
-            testBundle = [NSBundle bundleForClass:[self class]];
-        }
-        
         filePath = [testBundle pathForResource:resourceName
                                         ofType:@"json"
                                    inDirectory:MockDataDirectory];
