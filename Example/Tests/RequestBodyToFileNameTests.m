@@ -115,4 +115,30 @@
     [self verifyRequest:request];
 }
 
+- (void)testPostWildcardBody
+{
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:YES];
+    NSURLRequest *request = [self POSTRequestWithURLString:@"http://example.com/purchase"
+                                                      body:@{
+                                                             @"date": [NSDate date].description,
+                                                             }
+                                                    asJSON:YES];
+    [self verifyRequest:request];
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:NO];
+}
+
+- (void)testPostWildcardQueryAndBody
+{
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:YES];
+    NSString *urlString = [NSString stringWithFormat:@"http://example.com/purchase?timestamp=%@",
+                           @([NSDate date].timeIntervalSinceReferenceDate)];
+    NSURLRequest *request = [self POSTRequestWithURLString:urlString
+                                                      body:@{
+                                                             @"date": [NSDate date].description,
+                                                             }
+                                                    asJSON:YES];
+    [self verifyRequest:request];
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:NO];
+}
+
 @end

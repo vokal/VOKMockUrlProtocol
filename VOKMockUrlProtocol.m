@@ -26,6 +26,7 @@
 static NSString *const MockDataDirectory = @"VOKMockData";
 
 static NSString *const AppendSeparatorFormat = @"|%@";
+static NSString *const Wildcard = @"*";
 
 static NSString *const HTTPHeaderContentType = @"Content-type";
 static NSString *const HTTPHeaderContentTypeFormUrlencoded = @"application/x-www-form-urlencoded";
@@ -53,6 +54,12 @@ static NSBundle *TestBundle = nil;
 + (void)setTestBundle:(NSBundle *)bundle
 {
     TestBundle = bundle;
+}
+
+static BOOL AllowsWildcard = NO;
++ (void)setAllowsWildcardInMockDataFiles:(BOOL)allowsWildcard
+{
+    AllowsWildcard = allowsWildcard;
 }
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
@@ -108,6 +115,10 @@ static NSBundle *TestBundle = nil;
         NSString *hashedQuery = [self sha256HexOfData:queryData];
         [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy]];
         
+        if (AllowsWildcard) {
+            [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, Wildcard] mutableCopy]];
+        }
+        
         [resourceName appendFormat:queryFormat, self.request.URL.query];
     }
     
@@ -155,6 +166,10 @@ static NSBundle *TestBundle = nil;
                 [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyString] mutableCopy]];
             }
             [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyHash] mutableCopy]];
+            
+            if (AllowsWildcard) {
+                [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, Wildcard] mutableCopy]];
+            }
         }
     }
     

@@ -115,4 +115,53 @@
                           }];
 }
 
+- (void)testWildcardQueryFile
+{
+    //Given a URL resource that is date based and difficult to mock
+    NSDateFormatter *formatter = [NSDateFormatter new];
+    formatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss";
+    NSString *urlString = [NSString stringWithFormat:@"http://example.com/search?start=%@",
+                           [formatter stringFromDate:[NSDate date]]];
+    [self verifyRequestWithURLString:urlString
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
+                              XCTAssertEqual(data.length, 0);
+                          }];
+
+    //It is possible to serve a mock data file using a wildcard for the query string
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:YES];
+    [self verifyRequestWithURLString:urlString
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:NO];
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeAccepted);
+                              XCTAssertEqual(response.allHeaderFields.count, 0);
+                              XCTAssertEqual(data.length, 0);
+                          }];
+}
+
+- (void)testWildcardQueryFilePrefersExactMatch
+{
+    [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:YES];
+    //We have an exact match for this request and a wildcard file that could also match
+    //but we expect to prefer matching the exact filename
+    [self verifyRequestWithURLString:@"http://example.com/search?start=2017-03-19"
+                          completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
+                              [VOKMockUrlProtocol setAllowsWildcardInMockDataFiles:NO];
+                              if (!data) {
+                                  XCTFail();
+                                  return;
+                              }
+                              XCTAssertNil(error);
+                              //the more specific mock data file has a different status code from the wildcard one
+                              XCTAssertEqual(response.statusCode, kHTTPStatusCodeOK);
+                              XCTAssertEqual(response.allHeaderFields.count, 0);
+                              XCTAssertEqual(data.length, 0);
+                          }];
+}
+
 @end
