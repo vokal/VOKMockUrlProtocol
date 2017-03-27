@@ -43,7 +43,7 @@ Otherwise, use the SHA-256 hash of the request body, as a 64-character lower-cas
 
 ### Wildcards
 
-Some URL requests may be hard to mock due to query or body data that is too dynamic (eg: based on a date).  You can allow wildcards in the mock data filename using `setAllowsWildcardInMockDataFiles` to mock these requests.  If enabled, mock data files may include a `*` in place of the query string, body, or both.
+Some URL requests may be hard to mock due to query or body data that is too dynamic (eg: based on a date). You can allow wildcards in the mock data filename using `setAllowsWildcardInMockDataFiles` to mock these requests. If enabled, mock data files may include a `*` in place of the **entire** query string, body, or both. This allows multiple requests to be served by a single mock data file. If wildcards are enabled and both wildcard and non-wildcard data files are present, the non-wildcard data file will be used.
 
 ### Examples
 
