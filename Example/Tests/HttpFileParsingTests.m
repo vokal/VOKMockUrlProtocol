@@ -126,6 +126,7 @@
                           completion:^(NSData *data, NSHTTPURLResponse *response, NSError *error) {
                               XCTAssertEqual(response.statusCode, kHTTPStatusCodeNotFound);
                               XCTAssertEqual(data.length, 0);
+                              XCTAssertNil(error);
                           }];
 
     //It is possible to serve a mock data file using a wildcard for the query string
