@@ -105,21 +105,21 @@ static BOOL AllowsWildcard = NO;
     // Append separator and the path.
     [resourceName appendFormat:AppendSeparatorFormat, self.request.URL.path];
     
-    NSMutableArray *resourceNames = [NSMutableArray arrayWithObject:resourceName];
+    NSMutableArray *resourceNames = [NSMutableArray array];
+    
+    NSArray *resourceNamesWithoutBody = @[resourceName];
+    NSArray *bodyDataParts = @[];
     
     // If there's a query string, append ? and the query string.
+    NSString *queryFormat = @"?%@";
     if (self.request.URL.query) {
-        NSString *queryFormat = @"?%@";
         //take the SHA-256 hash of the query, just in case things get too long later
         NSData *queryData = [self.request.URL.query dataUsingEncoding:NSUTF8StringEncoding];
         NSString *hashedQuery = [self sha256HexOfData:queryData];
-        [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy]];
-        
-        if (AllowsWildcard) {
-            [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, Wildcard] mutableCopy]];
-        }
-        
-        [resourceName appendFormat:queryFormat, self.request.URL.query];
+        resourceNamesWithoutBody = @[
+                                     [[resourceName stringByAppendingFormat:queryFormat, self.request.URL.query] mutableCopy],
+                                     [[resourceName stringByAppendingFormat:queryFormat, hashedQuery] mutableCopy],
+                                     ];
     }
     
     // If the request is one that can have a body...
@@ -158,18 +158,41 @@ static BOOL AllowsWildcard = NO;
                 }
             }
         }
-        
-        NSArray *resourceNamesWithoutBody = [resourceNames copy];
-        [resourceNames removeAllObjects];
-        for (NSMutableString *name in resourceNamesWithoutBody) {
-            if (bodyString) {
-                [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyString] mutableCopy]];
+
+        if (bodyString) {
+            bodyDataParts = @[bodyString];
+        }
+        bodyDataParts = [bodyDataParts arrayByAddingObject:bodyHash];
+        for (NSString *resourceName in resourceNamesWithoutBody) {
+            for (NSString *bodyDataPart in bodyDataParts) {
+                [resourceNames addObject:[[resourceName stringByAppendingFormat:AppendSeparatorFormat, bodyDataPart] mutableCopy]];
             }
-            [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, bodyHash] mutableCopy]];
-            
-            if (AllowsWildcard) {
-                [resourceNames addObject:[[name stringByAppendingFormat:AppendSeparatorFormat, Wildcard] mutableCopy]];
+        }
+    } else {
+        [resourceNames addObjectsFromArray:resourceNamesWithoutBody];
+    }
+    
+    if (AllowsWildcard && (bodyDataParts.count || self.request.URL.query)) {
+        if (self.request.URL.query) {
+            if (bodyDataParts.count) {
+                for (NSString *resourceName in resourceNamesWithoutBody) {
+                    //path?query|*
+                    [resourceNames addObject:[[resourceName stringByAppendingFormat:AppendSeparatorFormat, Wildcard] mutableCopy]];
+                }
+                //add a wildcard body at the end to make path?*|*
+                bodyDataParts = [bodyDataParts arrayByAddingObject:Wildcard];
+                NSString *queryAndBodyFormat = [queryFormat stringByAppendingString:AppendSeparatorFormat];
+                for (NSString *bodyDataPart in bodyDataParts) {
+                    //path?*|body
+                    [resourceNames addObject:[[resourceName stringByAppendingFormat:queryAndBodyFormat, Wildcard, bodyDataPart] mutableCopy]];
+                }
+            } else { //no body, only wildcard query
+                //path?*
+                [resourceNames addObject:[[resourceName stringByAppendingFormat:queryFormat, Wildcard] mutableCopy]];
             }
+        } else { //no query, only wildcard body
+            //path|*
+            [resourceNames addObject:[[resourceName stringByAppendingFormat:AppendSeparatorFormat, Wildcard] mutableCopy]];
         }
     }
     
