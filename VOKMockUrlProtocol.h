@@ -20,4 +20,12 @@
  */
 + (void)setTestBundle:(NSBundle *)bundle;
 
+/**
+ *  Sets whether the wildcard "*" character is allowed in mock data filenames for query and body fragments.
+ *  Defaults to NO.
+ *
+ *  @param allowsWildcard Whether a wildcard character is allowed in the mock data filename.
+ */
++ (void)setAllowsWildcardInMockDataFiles:(BOOL)allowsWildcard;
+
 @end

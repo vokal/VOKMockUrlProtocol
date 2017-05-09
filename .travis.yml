@@ -1,5 +1,5 @@
 language: objective-c
-osx_image: xcode8
+osx_image: xcode8.2
 env:
   global:
     - SCAN_SKIP_BUILD=1
@@ -9,7 +9,7 @@ env:
     - SCAN_SCHEME="VOKMockUrlProtocol"         SCAN_SDK="iphonesimulator"
     - SCAN_SCHEME="VOKMockUrlProtocol-tvOS"    SCAN_SDK="appletvsimulator"
     - SCAN_SCHEME="VOKMockUrlProtocol-OSX"     SCAN_SDK="macosx"
-script: bundle exec scan
+script: bundle exec fastlane scan
 after_script:
   - bundle exec pod lib lint
 git:

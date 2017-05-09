@@ -41,6 +41,10 @@ Otherwise, use the SHA-256 hash of the request body, as a 64-character lower-cas
 
 **Note:** For backward compatibility when additional specific content-type handling is added in the future, if a more-specific content-type-based filename is not found, the hash-based filename will be tried before returning a `HTTP/1.1 404 Not Found` response.
 
+### Wildcards
+
+Some URL requests may be hard to mock due to query or body data that is too dynamic (eg: based on a date). You can allow wildcards in the mock data filename using `setAllowsWildcardInMockDataFiles` to mock these requests. If enabled, mock data files may include a `*` in place of the **entire** query string, body, or both. This allows multiple requests to be served by a single mock data file. If wildcards are enabled and both wildcard and non-wildcard data files are present, the non-wildcard data file will be used.
+
 ### Examples
 
 The request
@@ -55,6 +59,10 @@ Accept: */*
 yields the base name
 ```
 GET|-foo-?page=2
+```
+with an optional wildcard base name
+```
+GET|-foo-?*
 ```
 
 ---
@@ -71,6 +79,10 @@ Accept: */*
 yields the base name
 ```
 GET|-details?fb73ef92daa60d3b526724dd5f50738e8477d10e0edcf96ce79794666f6b0c0e
+```
+with an optional wildcard base name
+```
+GET|-details?*
 ```
 
 ---
@@ -94,6 +106,10 @@ with the fallback base name
 ```
 POST|-login-|169d720631e603967135cfce10d235e94aac22b87500ea09d1be295f5b300dca
 ```
+and an optional wildcard base name
+```
+POST|-login-|*
+```
 
 ---
 
@@ -115,4 +131,8 @@ POST|-login-|d5-email16-user@example.com8-password8-passworde
 with the fallback base name
 ```
 POST|-login-|236a9780f782b62654f6caf7c4614e47b15800c087a9d43c87c47164617a74f0
+```
+and an optional wildcard base name
+```
+POST|-login-|*
 ```
