@@ -1,5 +1,6 @@
 VOKMockUrlProtocol
 ==================
+> Maintained by @vokal-isaac
 
 [![CI Status](http://img.shields.io/travis/vokal/VOKMockUrlProtocol.svg?style=flat)](https://travis-ci.org/vokal/VOKMockUrlProtocol)
 [![Version](https://img.shields.io/cocoapods/v/VOKMockUrlProtocol.svg?style=flat)](http://cocoadocs.org/docsets/VOKMockUrlProtocol)
