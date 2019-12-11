@@ -1,5 +1,8 @@
 VOKMockUrlProtocol
 ==================
+
+This tool has been deprecated internally, in favor of [OHHTTPStubs](https://github.com/AliSoftware/OHHTTPStubs). This will be the our new standard tool for facilitating mock data interactions. If this tool does not meet your needs, other options worth consideration are [Mockingjay](https://github.com/kylef/Mockingjay) & [DVR](https://github.com/venmo/DVR).
+
 > Maintained by @vokal-isaac
 
 [![CI Status](http://img.shields.io/travis/vokal/VOKMockUrlProtocol.svg?style=flat)](https://travis-ci.org/vokal/VOKMockUrlProtocol)
